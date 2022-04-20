@@ -34,6 +34,7 @@ class Board(object):
         self.occupied_tiles = occupied_tiles
 
     def neighbors(self):
+        '''Return a list of all the neighbor boards the current board can accesss'''
         neighbors = []
         dim = self.__dim
         goal_blocks = self.goal_blocks

@@ -52,6 +52,7 @@ class Solver(object):
         self.__trace = self.__trace[::-1]
 
     def moves(self):
+        '''Return the number of moves required to reach a board cofiguration'''
         return(len(self.__trace)-1)
 
     def solution(self):

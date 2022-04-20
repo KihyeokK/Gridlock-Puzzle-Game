@@ -10,14 +10,6 @@ for line in fp2.readlines():
     goal += line
 board = Board(initial, goal)
 
-'''print(board)
-print(board.blocks)
-print(board.occupied_tiles)
-print(board.goal_blocks)
-
-for i in board.neighbors():
-    print(i)'''
-
 solver = Solver(board) #passing the initial board
 
 
