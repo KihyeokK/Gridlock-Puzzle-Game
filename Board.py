@@ -191,6 +191,10 @@ class Board(object):
         '''Return the dimension of the board.'''
         return self.__dim
 
+    def starting_blocks(self):
+        '''Retrun starting blocks configuration'''
+        return self.blocks
+
 
             
     #def create_2D_board():
