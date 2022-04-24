@@ -52,24 +52,56 @@ class Application(tk.Tk):
         self.choose_level_btn.grid(row=2)
 
     def choose_level_frame(self):
-        self.start_frame.destroy()
+        try:
+            self.start_frame.destroy()
+        except Exception:
+            pass
 
         self.choose_level_frame =tk.Frame(master=self)
         self.choose_level_frame.grid(row=1)
 
         self.easy = tk.Label(master=self.choose_level_frame, text="Easy Mode: 4x4 puzzles")
         self.intermediate = tk.Label(master=self.choose_level_frame, text="Intermediate Mode: 5x5 puzzles")
-        self.hard = tk.Label(master=self, text="Hard Mode: 6x6 puzzles")
+        self.hard = tk.Label(master=self.choose_level_frame, text="Hard Mode: 6x6 puzzles")
 
-        self.easy.grid(row=1)
-        self.intermediate.grid(row=2)
-        self.hard.grid(row=3)
+        self.easy.grid(row=1, column=1)
+        self.intermediate.grid(row=3, column=1)
+        self.hard.grid(row=5, column=1)
 
-    #def display_levels
+        self.display_levels()
 
-    #def get_puzzle_names(self):
-        #DIR = os.listdir()
-        
+    def display_levels(self):
+        '''Display level buttons.'''
+        self.level_frame1 = tk.Frame(master=self.choose_level_frame, width=10, height=10, bg="gray")
+        self.level_frame2 = tk.Frame(master=self.choose_level_frame, width=10, height=10, bg="gray")
+        self.level_frame3 = tk.Frame(master=self.choose_level_frame, width=10, height=10, bg="gray")
+
+        self.level_frame1.grid(row=2, column=1)
+        self.level_frame2.grid(row=4, column=1)
+        self.level_frame3.grid(row=6, column=1)
+
+        easy, intermediate, hard = self.get_puzzle_names()
+
+        for i in range(len(easy)):
+            self.level_btn = tk.Button(master=self.level_frame1, text=f"4level{i+1}")
+            self.level_btn.grid(row=1, column=i+1)
+
+        for i in range(len(intermediate)):
+            self.level_btn = tk.Button(master=self.level_frame2, text=f"5level{i+1}")
+            self.level_btn.grid(row=1, column=i+1)
+
+        for i in range(len(hard)):
+            self.level_btn = tk.Button(master=self.level_frame3, text=f"6level{i+1}")
+            self.level_btn.grid(row=1, column=i+1)    
+
+    @staticmethod
+    def get_puzzle_names():
+        puzzles = []
+        puzzles.append(os.listdir("puzzles/puzzle4x4"))
+        puzzles.append(os.listdir("puzzles/puzzle5x5"))
+        puzzles.append(os.listdir("puzzles/puzzle6x6"))
+
+        return puzzles        
 
     #def get_board
 
