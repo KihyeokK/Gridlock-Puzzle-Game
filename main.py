@@ -5,8 +5,8 @@ from Solver import Solver
 
 
 
-fp1 = open(f"puzzles/5x5.txt")
-fp2 = open(f"puzzles/5x5solution.txt")
+fp1 = open(f"puzzles/6x6-02.txt")
+fp2 = open(f"puzzles/6x6-02solution.txt")
 initial, goal = "", ""
 for line in fp1.readlines():
     initial += line #constructing a string containing all the lines
@@ -37,10 +37,10 @@ class Application(tk.Tk):
 
         self.board_size = PIXELS_PER_SQUARE * board.dimension()
 
-        self.top_frame = tk.Frame(master=self)
-        self.top_frame.pack()
+        self.main_frame = tk.Frame(master=self)
+        self.main_frame.pack()
 
-        self.canvas = tk.Canvas(master=self.top_frame, width=self.board_size, height=self.board_size, bg="black")
+        self.canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=self.board_size, bg="black")
         self.canvas.pack()
 
         self.bottom_frame = tk.Frame(master=self)
@@ -86,16 +86,21 @@ class Application(tk.Tk):
                 self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill="yellow" )
                 
     def display_full_solution(self):
+        self.display_full_solution_btn.destroy()
+
         board = self.board
         solver = Solver(board)
 
         self.solution = solver.solution()
         self.step = 0
         self.max_step = len(self.solution) - 1
+
+        self.move_count = tk.Label(master=self.main_frame, text=None)
+        self.move_count.pack()
         
         self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()]) #two commands
-        self.next_move_btn.pack()
-                
+        self.next_move_btn.pack()        
+
     def display_solution_move(self):
         board = self.solution[self.step] #one board move configuration
         self.draw_solution_blocks(board)
@@ -104,7 +109,7 @@ class Application(tk.Tk):
         '''Draw board configuration of each solution step'''
         #redraw canvas
         self.canvas.destroy()
-        self.canvas = tk.Canvas(master=self.top_frame, width=self.board_size, height=self.board_size, bg="blue")
+        self.canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=self.board_size, bg="blue")
         self.canvas.pack()
         self.draw_board_base()   
 
@@ -113,6 +118,13 @@ class Application(tk.Tk):
             self.previous_move_btn.destroy()
         except Exception: #if button not created yet
             pass
+        
+        if self.step == 0:
+            self.move_count["text"] = "Initial puzzle"
+        elif self.step == self.max_step:
+            self.move_count["text"] = "Puzzle is solved!"
+        else:
+            self.move_count["text"] = f"move #{self.step}"
 
         #may replace following lines with draw_initial_blocks() after modifying it.
         dim = board.dimension()
@@ -132,17 +144,18 @@ class Application(tk.Tk):
             elif direction == "vertical":
                 self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill="white" )
 
+        #handle buttons displaying
         if self.step == self.max_step:
             self.previous_move_btn = tk.Button(master=self.bottom_frame, text="Previous Move", command=lambda: [self.decrement_step(), self.display_solution_move()])
             self.previous_move_btn.pack()
         elif self.step == 0:
-            self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()]) #two commands
+            self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()])
             self.next_move_btn.pack()
         else:
             self.previous_move_btn = tk.Button(master=self.bottom_frame, text="Previous Move", command=lambda: [self.decrement_step(), self.display_solution_move()])
             self.previous_move_btn.pack()
 
-            self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()]) #two commands
+            self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()])
             self.next_move_btn.pack()
 
 
