@@ -40,8 +40,33 @@ class Application(tk.Tk):
         self.main_frame = tk.Frame(master=self)
         self.main_frame.pack()
 
+        self.middle_frame = tk.Frame(master=self)
+        self.middle_frame.pack()
+
         self.canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=self.board_size, bg="black")
-        self.canvas.pack()
+        self.canvas.grid(row=2, column=2)
+
+        self.left_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=self.board_size, bg="gray")
+        self.left_canvas.grid(row=2, column=1)
+
+        self.right_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=self.board_size, bg="gray")
+        self.right_canvas.grid(row=2, column=3)
+
+        self.top_canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=PIXELS_PER_SQUARE // 2, bg="gray")
+        self.top_canvas.grid(row=1, column=2)
+
+        self.bottom_canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=PIXELS_PER_SQUARE // 2, bg="gray")
+        self.bottom_canvas.grid(row=3, column=2)    
+
+        self.top_left_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=PIXELS_PER_SQUARE // 2, bg="gray")
+        self.top_right_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=PIXELS_PER_SQUARE // 2, bg="gray")
+        self.bottom_left_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=PIXELS_PER_SQUARE // 2, bg="gray")
+        self.bottom_right_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=PIXELS_PER_SQUARE // 2, bg="gray")
+
+        self.top_left_canvas.grid(row=1, column=1)
+        self.top_right_canvas.grid(row=1, column=3)
+        self.bottom_left_canvas.grid(row=3, column=1)
+        self.bottom_right_canvas.grid(row=3, column=3)
 
         self.bottom_frame = tk.Frame(master=self)
         self.bottom_frame.pack()
@@ -95,7 +120,7 @@ class Application(tk.Tk):
         self.step = 0
         self.max_step = len(self.solution) - 1
 
-        self.move_count = tk.Label(master=self.main_frame, text=None)
+        self.move_count = tk.Label(master=self.middle_frame, text="Initial puzzle")
         self.move_count.pack()
         
         self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()]) #two commands
@@ -110,7 +135,7 @@ class Application(tk.Tk):
         #redraw canvas
         self.canvas.destroy()
         self.canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=self.board_size, bg="blue")
-        self.canvas.pack()
+        self.canvas.grid(row=2, column=2)
         self.draw_board_base()   
 
         self.next_move_btn.destroy()
