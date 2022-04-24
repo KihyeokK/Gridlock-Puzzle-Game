@@ -30,7 +30,6 @@ import tkinter as tk
 PIXELS_PER_SQUARE = 100
 
 class Application(tk.Tk):
-
     def __init__(self, board):
         super().__init__()
 
@@ -92,7 +91,7 @@ class Application(tk.Tk):
 
         self.solution = solver.solution()
         self.step = 0
-        self.max_step = len(self.solution)
+        self.max_step = len(self.solution) - 1
         
         self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()]) #two commands
         self.next_move_btn.pack()
@@ -102,18 +101,20 @@ class Application(tk.Tk):
         self.draw_solution_blocks(board)
     
     def draw_solution_blocks(self, board):
+        '''Draw board configuration of each solution step'''
         #redraw canvas
         self.canvas.destroy()
         self.canvas = tk.Canvas(master=self.top_frame, width=self.board_size, height=self.board_size, bg="blue")
         self.canvas.pack()
-        self.draw_board_base()    
+        self.draw_board_base()   
 
-        self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()]) #two commands
-        self.next_move_btn.pack()
+        self.next_move_btn.destroy()
+        try:
+            self.previous_move_btn.destroy()
+        except Exception: #if button not created yet
+            pass
 
-        self.previous_move_btn = tk.Button(master=self.bottom_frame, text="Previous Move", command=lambda: [self.decrement_step(), self.display_solution_move()])
-        self.previous_move_btn.pack()
-
+        #may replace following lines with draw_initial_blocks() after modifying it.
         dim = board.dimension()
         blocks = board.starting_blocks()
         for block in blocks:
@@ -132,9 +133,17 @@ class Application(tk.Tk):
                 self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill="white" )
 
         if self.step == self.max_step:
-            self.next_move_btn.destroy()
+            self.previous_move_btn = tk.Button(master=self.bottom_frame, text="Previous Move", command=lambda: [self.decrement_step(), self.display_solution_move()])
+            self.previous_move_btn.pack()
         elif self.step == 0:
-            self.previous_move_btn.destroy()
+            self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()]) #two commands
+            self.next_move_btn.pack()
+        else:
+            self.previous_move_btn = tk.Button(master=self.bottom_frame, text="Previous Move", command=lambda: [self.decrement_step(), self.display_solution_move()])
+            self.previous_move_btn.pack()
+
+            self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()]) #two commands
+            self.next_move_btn.pack()
 
 
     def increment_step(self):
