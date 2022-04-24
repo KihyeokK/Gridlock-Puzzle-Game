@@ -31,15 +31,10 @@ import os
 PIXELS_PER_SQUARE = 100
 
 class Application(tk.Tk):
-    def __init__(self, board):
+    def __init__(self):
         super().__init__()
 
         self.start_frame()
-
-        self.board = board
-
-        self.board_size = PIXELS_PER_SQUARE * board.dimension()
-
 
     def start_frame(self):
         self.start_frame = tk.Frame(master=self)
@@ -83,16 +78,16 @@ class Application(tk.Tk):
         easy, intermediate, hard = self.get_puzzle_names()
 
         for i in range(len(easy)):
-            self.level_btn = tk.Button(master=self.level_frame1, text=f"4level{i+1}")
+            self.level_btn = tk.Button(master=self.level_frame1, text=f"4level{i+1}", command=lambda level=i+1: self.set_up_canvas("4x4", level))
             self.level_btn.grid(row=1, column=i+1)
 
         for i in range(len(intermediate)):
-            self.level_btn = tk.Button(master=self.level_frame2, text=f"5level{i+1}")
+            self.level_btn = tk.Button(master=self.level_frame2, text=f"5level{i+1}", command=lambda level=i+1: self.set_up_canvas("5x5", level))
             self.level_btn.grid(row=1, column=i+1)
 
         for i in range(len(hard)):
-            self.level_btn = tk.Button(master=self.level_frame3, text=f"6level{i+1}")
-            self.level_btn.grid(row=1, column=i+1)    
+            self.level_btn = tk.Button(master=self.level_frame3, text=f"6level{i+1}", command=lambda level=i+1: self.set_up_canvas("6x6", level))
+            self.level_btn.grid(row=1, column=i+1)  
 
     @staticmethod
     def get_puzzle_names():
@@ -103,9 +98,26 @@ class Application(tk.Tk):
 
         return puzzles        
 
-    #def get_board
+    def get_board(self, puzzle, level):
+        '''Read puzzle files and return board instance.'''
+        fp1 = open(f"puzzles/puzzle{puzzle}/board{puzzle}-0{level}.txt")
+        fp2 = open(f"puzzles/puzzle{puzzle}-sol/board{puzzle}-0{level}-sol.txt")
+        initial, goal = "", ""
+        for line in fp1.readlines():
+            initial += line #constructing a string containing all the lines
+        for line in fp2.readlines():
+            goal += line
+        board = Board(initial, goal)
 
-    def set_up_canvas(self):
+        return board
+        
+
+
+    def set_up_canvas(self, puzzle, level):
+        self.board = self.get_board(puzzle, level)
+
+        self.board_size = PIXELS_PER_SQUARE * self.board.dimension()
+
         self.main_frame = tk.Frame(master=self)
         self.main_frame.grid(row=1)
 
@@ -147,7 +159,7 @@ class Application(tk.Tk):
         self.display_full_solution_btn.pack()
 
         self.draw_board_base()
-        self.draw_initial_blocks()
+        self.draw_blocks(self.board)
 
 
 
@@ -161,9 +173,9 @@ class Application(tk.Tk):
                 y = row * PIXELS_PER_SQUARE
                 self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE, fill="gray")
 
-    def draw_initial_blocks(self):
-        '''Draw the initial board configuration.'''
-        board = self.board
+    def draw_blocks(self, board):
+        '''Draw the board configuration.'''
+        board = board
         dim = board.dimension()
         blocks = board.starting_blocks()
         for block in blocks:
@@ -242,22 +254,22 @@ class Application(tk.Tk):
 
         #handle buttons displaying
         if self.step == self.max_step:
-            self.previous_move_btn = tk.Button(master=self.bottom_frame, text="Previous Move", command=lambda: [self.decrement_step(), self.display_solution_move()])
+            self.previous_move_btn = tk.Button(master=self.bottom_frame, text="Previous Move", command=lambda: [self.decrease_step(), self.display_solution_move()])
             self.previous_move_btn.pack()
         elif self.step == 0:
-            self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()])
+            self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increase_step(), self.display_solution_move()])
             self.next_move_btn.pack()
         else:
-            self.previous_move_btn = tk.Button(master=self.bottom_frame, text="Previous Move", command=lambda: [self.decrement_step(), self.display_solution_move()])
+            self.previous_move_btn = tk.Button(master=self.bottom_frame, text="Previous Move", command=lambda: [self.decrease_step(), self.display_solution_move()])
             self.previous_move_btn.pack()
 
-            self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()])
+            self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increase_step(), self.display_solution_move()])
             self.next_move_btn.pack()
 
-    def increment_step(self):
+    def increase_step(self):
         self.step += 1
     
-    def decrement_step(self):
+    def decrease_step(self):
         self.step -= 1
 
 
@@ -270,7 +282,7 @@ class Application(tk.Tk):
 
 
 if __name__ == "__main__":
-    app = Application(board)
+    app = Application()
     app.mainloop()
 
 
