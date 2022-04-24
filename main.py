@@ -5,8 +5,8 @@ from Solver import Solver
 
 
 
-fp1 = open(f"puzzles/puzzle6x6/board6x6-02.txt")
-fp2 = open(f"puzzles/puzzle6x6-sol/board6x6-02-sol.txt")
+fp1 = open(f"puzzles/puzzle6x6/board6x6-3.txt")
+fp2 = open(f"puzzles/puzzle6x6-sol/board6x6-3-sol.txt")
 initial, goal = "", ""
 for line in fp1.readlines():
     initial += line #constructing a string containing all the lines
@@ -100,8 +100,8 @@ class Application(tk.Tk):
 
     def get_board(self, puzzle, level):
         '''Read puzzle files and return board instance.'''
-        fp1 = open(f"puzzles/puzzle{puzzle}/board{puzzle}-0{level}.txt")
-        fp2 = open(f"puzzles/puzzle{puzzle}-sol/board{puzzle}-0{level}-sol.txt")
+        fp1 = open(f"puzzles/puzzle{puzzle}/board{puzzle}-{level}.txt")
+        fp2 = open(f"puzzles/puzzle{puzzle}-sol/board{puzzle}-{level}-sol.txt")
         initial, goal = "", ""
         for line in fp1.readlines():
             initial += line #constructing a string containing all the lines
@@ -206,7 +206,7 @@ class Application(tk.Tk):
         self.move_count = tk.Label(master=self.middle_frame, text="Initial puzzle")
         self.move_count.pack()
         
-        self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()]) #two commands
+        self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increase_step(), self.display_solution_move()]) #two commands
         self.next_move_btn.pack()        
 
     def display_solution_move(self):
