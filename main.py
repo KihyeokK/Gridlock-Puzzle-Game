@@ -33,15 +33,30 @@ class Application(tk.Tk):
     def __init__(self, board):
         super().__init__()
 
+        self.start_frame()
+
         self.board = board
 
         self.board_size = PIXELS_PER_SQUARE * board.dimension()
 
+
+    def start_frame(self):
+        self.start_frame = tk.Frame(master=self)
+        self.start_frame.grid(row=1)
+
+        self.welcome = tk.Label(master=self.start_frame, text="Welcome to Gridlock puzzle game!")
+        self.welcome.grid(row=1)
+
+        self.choose_level_btn = tk.Button(master=self.start_frame, text="Choose Level", command=self.set_up_canvas)
+        self.choose_level_btn.grid(row=2)
+    
+
+    def set_up_canvas(self):
         self.main_frame = tk.Frame(master=self)
-        self.main_frame.pack()
+        self.main_frame.grid(row=1)
 
         self.middle_frame = tk.Frame(master=self)
-        self.middle_frame.pack()
+        self.middle_frame.grid(row=2)
 
         self.canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=self.board_size, bg="black")
         self.canvas.grid(row=2, column=2)
@@ -69,7 +84,7 @@ class Application(tk.Tk):
         self.bottom_right_canvas.grid(row=3, column=3)
 
         self.bottom_frame = tk.Frame(master=self)
-        self.bottom_frame.pack()
+        self.bottom_frame.grid(row=3)
 
         self.display_solved_btn = tk.Button(master=self.bottom_frame, text="Show Solved Board")
         self.display_solved_btn.pack()
@@ -79,6 +94,8 @@ class Application(tk.Tk):
 
         self.draw_board_base()
         self.draw_initial_blocks()
+
+
 
     def draw_board_base(self):
         '''Draw the board base.'''
@@ -134,7 +151,7 @@ class Application(tk.Tk):
         '''Draw board configuration of each solution step'''
         #redraw canvas
         self.canvas.destroy()
-        self.canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=self.board_size, bg="blue")
+        self.canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=self.board_size, bg="black")
         self.canvas.grid(row=2, column=2)
         self.draw_board_base()   
 
@@ -183,12 +200,12 @@ class Application(tk.Tk):
             self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increment_step(), self.display_solution_move()])
             self.next_move_btn.pack()
 
-
     def increment_step(self):
         self.step += 1
     
     def decrement_step(self):
         self.step -= 1
+
 
 
 
