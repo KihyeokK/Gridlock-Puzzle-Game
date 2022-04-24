@@ -5,8 +5,8 @@ from Solver import Solver
 
 
 
-fp1 = open(f"puzzles/6x6-02.txt")
-fp2 = open(f"puzzles/6x6-02solution.txt")
+fp1 = open(f"puzzles/puzzle6x6/board6x6-02.txt")
+fp2 = open(f"puzzles/puzzle6x6-sol/board6x6-02-sol.txt")
 initial, goal = "", ""
 for line in fp1.readlines():
     initial += line #constructing a string containing all the lines
@@ -26,6 +26,7 @@ print(solver.checked_board_positions)
 #---------------------------------
 
 import tkinter as tk
+import os
 
 PIXELS_PER_SQUARE = 100
 
@@ -47,9 +48,30 @@ class Application(tk.Tk):
         self.welcome = tk.Label(master=self.start_frame, text="Welcome to Gridlock puzzle game!")
         self.welcome.grid(row=1)
 
-        self.choose_level_btn = tk.Button(master=self.start_frame, text="Choose Level", command=self.set_up_canvas)
+        self.choose_level_btn = tk.Button(master=self.start_frame, text="Choose Level", command=self.choose_level_frame)
         self.choose_level_btn.grid(row=2)
-    
+
+    def choose_level_frame(self):
+        self.start_frame.destroy()
+
+        self.choose_level_frame =tk.Frame(master=self)
+        self.choose_level_frame.grid(row=1)
+
+        self.easy = tk.Label(master=self.choose_level_frame, text="Easy Mode: 4x4 puzzles")
+        self.intermediate = tk.Label(master=self.choose_level_frame, text="Intermediate Mode: 5x5 puzzles")
+        self.hard = tk.Label(master=self, text="Hard Mode: 6x6 puzzles")
+
+        self.easy.grid(row=1)
+        self.intermediate.grid(row=2)
+        self.hard.grid(row=3)
+
+    #def display_levels
+
+    #def get_puzzle_names(self):
+        #DIR = os.listdir()
+        
+
+    #def get_board
 
     def set_up_canvas(self):
         self.main_frame = tk.Frame(master=self)
