@@ -36,13 +36,17 @@ class Application(tk.Tk):
     def __init__(self):
         super().__init__()
 
+        width_position = self.winfo_screenwidth()//2 - self.winfo_reqwidth()
+        height_position = self.winfo_screenheight()//2 - self.winfo_reqheight()
+        self.geometry(f"+{width_position}+{height_position}")
+        self.title('Gridlock Puzzle Game')
         self.display_start_frame()
 
     def display_start_frame(self):
         self.start_frame = tk.Frame(master=self)
         self.start_frame.grid(row=1)
 
-        self.welcome_lbl = tk.Label(master=self.start_frame, text="Welcome to Gridlock puzzle game!",width=30, height=5)
+        self.welcome_lbl = tk.Label(master=self.start_frame, text="Welcome to Gridlock Puzzle Game!",width=30, height=5)
         self.welcome_lbl.config(font=("Arial", 40))
         self.welcome_lbl.grid(row=1, column=1)
 
@@ -86,18 +90,18 @@ class Application(tk.Tk):
         easy, intermediate, hard = self.get_puzzle_names()
 
         for i in range(len(easy)):
-            self.level_btn = tk.Button(master=self.level_frame1, text=f"4level{i+1}", command=lambda level=i+1: self.display_canvas("4x4", level))
-            self.level_btn.config(font=("Arial", LEVEL_FONT_SIZE), padx=5, pady=5)
+            self.level_btn = tk.Button(master=self.level_frame1, text=f"Level {i+1}", command=lambda level=i+1: self.display_canvas("4x4", level))
+            self.level_btn.config(font=("Arial", LEVEL_FONT_SIZE), padx=3, pady=5)
             self.level_btn.grid(row=1, column=i+1)
 
         for i in range(len(intermediate)):
-            self.level_btn = tk.Button(master=self.level_frame2, text=f"5level{i+1}", command=lambda level=i+1: self.display_canvas("5x5", level))
-            self.level_btn.config(font=("Arial", LEVEL_FONT_SIZE), padx=5, pady=5)
+            self.level_btn = tk.Button(master=self.level_frame2, text=f"Level {i+1}", command=lambda level=i+1: self.display_canvas("5x5", level))
+            self.level_btn.config(font=("Arial", LEVEL_FONT_SIZE), padx=3, pady=5)
             self.level_btn.grid(row=1, column=i+1)
 
         for i in range(len(hard)):
-            self.level_btn = tk.Button(master=self.level_frame3, text=f"6level{i+1}", command=lambda level=i+1: self.display_canvas("6x6", level))
-            self.level_btn.config(font=("Arial", LEVEL_FONT_SIZE), padx=5, pady=5)
+            self.level_btn = tk.Button(master=self.level_frame3, text=f"Level {i+1}", command=lambda level=i+1: self.display_canvas("6x6", level))
+            self.level_btn.config(font=("Arial", LEVEL_FONT_SIZE), padx=3, pady=5)
             self.level_btn.grid(row=1, column=i+1)  
 
     @staticmethod
@@ -235,11 +239,10 @@ class Application(tk.Tk):
         self.step = 0
         self.max_step = len(self.solution) - 1
 
-        self.move_count_lbl = tk.Label(master=self.middle_frame, text="Initial puzzle")
+        self.move_count_lbl = tk.Label(master=self.middle_frame, text="")
         self.move_count_lbl.grid(row=1)
-        
-        self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increase_step(), self.display_solution_move()]) #two commands
-        self.next_move_btn.grid(row=2, column=2)        
+
+        self.display_solution_move()   
 
     def display_solution_move(self):
         board = self.solution[self.step] #one board move configuration
@@ -253,8 +256,8 @@ class Application(tk.Tk):
         self.canvas.grid(row=2, column=2)
         self.draw_board_base()   
 
-        self.next_move_btn.destroy()
         try:
+            self.next_move_btn.destroy()
             self.previous_move_btn.destroy()
         except Exception: #if button not created yet
             pass
