@@ -195,6 +195,7 @@ class Application(tk.Tk):
         self.display_full_solution_btn.grid(row=2)
 
         self.draw_board_base()
+        self.draw_exit()
         self.draw_blocks(self.board)
 
 
@@ -208,6 +209,28 @@ class Application(tk.Tk):
                 x = col * PIXELS_PER_SQUARE
                 y = row * PIXELS_PER_SQUARE
                 self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE, fill="gray")
+        
+    def draw_exit(self):
+        '''Draw exit based on main block's position'''
+        board = self.board
+        dim = board.dimension()
+        blocks = board.starting_blocks()
+        for block in blocks:
+            if block == "M":
+                direction = blocks[block][1]
+                start_tile = blocks[block][0][0]
+                break
+        if direction == "horizontal":
+            row = start_tile // dim
+            x = 0
+            y = row * PIXELS_PER_SQUARE
+            self.right_canvas.create_rectangle(x, y, x + PIXELS_PER_SQUARE // 2 + 5, y + PIXELS_PER_SQUARE + 5, fill="white")
+        elif direction == "vertical":
+            col = start_tile // dim
+            x = col * PIXELS_PER_SQUARE
+            y = 0
+            self.bottom_canvas.create_rectangle(x, y, x + PIXELS_PER_SQUARE + 5, y + PIXELS_PER_SQUARE // 2 + 5, fill="white")
+            
 
     def draw_blocks(self, board, block_color="yellow"):
         '''Draw the board configuration.'''
@@ -230,6 +253,7 @@ class Application(tk.Tk):
                 self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill=block_color )
                 
     def display_full_solution(self):
+        '''Handle display_full_solution_btn clik.'''
         self.display_full_solution_btn.destroy()
 
         board = self.board
@@ -245,7 +269,7 @@ class Application(tk.Tk):
         self.display_solution_move()   
     
     def display_solution_move(self):
-        '''Display board of each solution step, different lables and associated buttons.'''
+        '''Display board of each solution step, different labels and associated buttons.'''
         board = self.solution[self.step] #one board move configuration
 
         #redraw canvas
