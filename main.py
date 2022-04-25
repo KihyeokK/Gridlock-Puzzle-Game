@@ -209,7 +209,7 @@ class Application(tk.Tk):
                 y = row * PIXELS_PER_SQUARE
                 self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE, fill="gray")
 
-    def draw_blocks(self, board):
+    def draw_blocks(self, board, block_color="yellow"):
         '''Draw the board configuration.'''
         board = board
         dim = board.dimension()
@@ -225,9 +225,9 @@ class Application(tk.Tk):
             if block == "M":
                 self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill="red" )
             elif direction == "horizontal":
-                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill="yellow" )
+                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill=block_color )
             elif direction == "vertical":
-                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill="yellow" )
+                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill=block_color )
                 
     def display_full_solution(self):
         self.display_full_solution_btn.destroy()
@@ -243,13 +243,11 @@ class Application(tk.Tk):
         self.move_count_lbl.grid(row=1)
 
         self.display_solution_move()   
-
-    def display_solution_move(self):
-        board = self.solution[self.step] #one board move configuration
-        self.draw_solution_blocks(board)
     
-    def draw_solution_blocks(self, board):
-        '''Draw board configuration of each solution step'''
+    def display_solution_move(self):
+        '''Display board of each solution step, different lables and associated buttons.'''
+        board = self.solution[self.step] #one board move configuration
+
         #redraw canvas
         self.canvas.destroy()
         self.canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=self.board_size, bg="black")
@@ -261,7 +259,8 @@ class Application(tk.Tk):
             self.previous_move_btn.destroy()
         except Exception: #if button not created yet
             pass
-        
+            
+        #top label
         if self.step == 0:
             self.move_count_lbl["text"] = "Initial puzzle"
         elif self.step == self.max_step:
@@ -269,23 +268,8 @@ class Application(tk.Tk):
         else:
             self.move_count_lbl["text"] = f"move #{self.step}"
 
-        #may replace following lines with draw_initial_blocks() after modifying it.
-        dim = board.dimension()
-        blocks = board.starting_blocks()
-        for block in blocks:
-            direction = blocks[block][1]
-            block_length = len(blocks[block][0])
-            start_tile = blocks[block][0][0]
-            row = start_tile // dim
-            col = start_tile % dim
-            x = col * PIXELS_PER_SQUARE
-            y = row * PIXELS_PER_SQUARE
-            if block == "M":
-                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill="red" )
-            elif direction == "horizontal":
-                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill="white" )
-            elif direction == "vertical":
-                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill="white" )
+        #replaced
+        self.draw_blocks(board, "white")
 
         #handle buttons displaying
         if self.step == self.max_step:
