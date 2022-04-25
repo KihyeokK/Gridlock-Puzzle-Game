@@ -36,27 +36,27 @@ class Application(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.start_frame()
+        self.display_start_frame()
 
-    def start_frame(self):
+    def display_start_frame(self):
         self.start_frame = tk.Frame(master=self)
         self.start_frame.grid(row=1)
 
-        self.welcome = tk.Label(master=self.start_frame, text="Welcome to Gridlock puzzle game!",width=30, height=5)
-        self.welcome.config(font=("Arial", 40))
-        self.welcome.grid(row=1, column=1)
+        self.welcome_lbl = tk.Label(master=self.start_frame, text="Welcome to Gridlock puzzle game!",width=30, height=5)
+        self.welcome_lbl.config(font=("Arial", 40))
+        self.welcome_lbl.grid(row=1, column=1)
 
-        self.choose_level_btn = tk.Button(master=self.start_frame, text="Choose Level", command=self.choose_level_frame)
+        self.choose_level_btn = tk.Button(master=self.start_frame, text="Choose Level", command=self.display_choose_level_frame)
         self.choose_level_btn.config(font=("Arial", LEVEL_FONT_SIZE), padx=5, pady=10)
         self.choose_level_btn.grid(row=2, column=1)
 
-    def choose_level_frame(self):
+    def display_choose_level_frame(self):
         try:
             self.start_frame.destroy()
         except Exception:
             pass
 
-        self.choose_level_frame =tk.Frame(master=self)
+        self.choose_level_frame = tk.Frame(master=self)
         self.choose_level_frame.grid(row=1)
 
         self.easy = tk.Label(master=self.choose_level_frame, text="Easy Mode: 4x4 puzzles", width=30, height=2)
@@ -86,17 +86,17 @@ class Application(tk.Tk):
         easy, intermediate, hard = self.get_puzzle_names()
 
         for i in range(len(easy)):
-            self.level_btn = tk.Button(master=self.level_frame1, text=f"4level{i+1}", command=lambda level=i+1: self.set_up_canvas("4x4", level))
+            self.level_btn = tk.Button(master=self.level_frame1, text=f"4level{i+1}", command=lambda level=i+1: self.display_canvas("4x4", level))
             self.level_btn.config(font=("Arial", LEVEL_FONT_SIZE), padx=5, pady=5)
             self.level_btn.grid(row=1, column=i+1)
 
         for i in range(len(intermediate)):
-            self.level_btn = tk.Button(master=self.level_frame2, text=f"5level{i+1}", command=lambda level=i+1: self.set_up_canvas("5x5", level))
+            self.level_btn = tk.Button(master=self.level_frame2, text=f"5level{i+1}", command=lambda level=i+1: self.display_canvas("5x5", level))
             self.level_btn.config(font=("Arial", LEVEL_FONT_SIZE), padx=5, pady=5)
             self.level_btn.grid(row=1, column=i+1)
 
         for i in range(len(hard)):
-            self.level_btn = tk.Button(master=self.level_frame3, text=f"6level{i+1}", command=lambda level=i+1: self.set_up_canvas("6x6", level))
+            self.level_btn = tk.Button(master=self.level_frame3, text=f"6level{i+1}", command=lambda level=i+1: self.display_canvas("6x6", level))
             self.level_btn.config(font=("Arial", LEVEL_FONT_SIZE), padx=5, pady=5)
             self.level_btn.grid(row=1, column=i+1)  
 
@@ -124,18 +124,21 @@ class Application(tk.Tk):
         
 
 
-    def set_up_canvas(self, puzzle, level):
+    def display_canvas(self, puzzle, level):
         self.choose_level_frame.destroy()
 
         self.board = self.get_board(puzzle, level)
 
         self.board_size = PIXELS_PER_SQUARE * self.board.dimension()
 
+        self.top_frame = tk.Frame(master=self)
+        self.top_frame.grid(row=1)
+
         self.main_frame = tk.Frame(master=self)
-        self.main_frame.grid(row=1)
+        self.main_frame.grid(row=2)
 
         self.middle_frame = tk.Frame(master=self)
-        self.middle_frame.grid(row=2)
+        self.middle_frame.grid(row=3)
 
         self.canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=self.board_size, bg="black")
         self.canvas.grid(row=2, column=2)
@@ -163,7 +166,23 @@ class Application(tk.Tk):
         self.bottom_right_canvas.grid(row=3, column=3)
 
         self.bottom_frame = tk.Frame(master=self)
-        self.bottom_frame.grid(row=3)
+        self.bottom_frame.grid(row=4)
+
+        if puzzle[-3:] == "4x4":
+            self.mode_lbl = tk.Label(master=self.top_frame, text="EASY MODE:")
+        elif puzzle[-3:] == "5x5":
+            self.mode_lbl = tk.Label(master=self.top_frame, text="INTERMEDIATE MODE:")
+        elif puzzle[-3:] == "6x6":
+            self.mode_lbl = tk.Label(master=self.top_frame, text="HARD MODE:")
+        self.mode_lbl.grid(row=1, column=1)
+        self.mode_lbl.config(font=("Arial", LEVEL_FONT_SIZE))
+        
+        self.level_lbl = tk.Label(master=self.top_frame, text=f"LEVEL {level}")
+        self.level_lbl.config(font=("Arial", LEVEL_FONT_SIZE))
+        self.level_lbl.grid(row=1, column=2)
+
+        self.choose_again_btn = tk.Button(master=self.middle_frame, text="Choose different mode or level", command=self.choose_again)
+        self.choose_again_btn.grid(row=2)
 
         #self.display_solved_btn = tk.Button(master=self.bottom_frame, text="Show Solved Board")
         #self.display_solved_btn.grid(row=1)
@@ -216,8 +235,8 @@ class Application(tk.Tk):
         self.step = 0
         self.max_step = len(self.solution) - 1
 
-        self.move_count = tk.Label(master=self.middle_frame, text="Initial puzzle")
-        self.move_count.pack()
+        self.move_count_lbl = tk.Label(master=self.middle_frame, text="Initial puzzle")
+        self.move_count_lbl.grid(row=1)
         
         self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increase_step(), self.display_solution_move()]) #two commands
         self.next_move_btn.grid(row=2, column=2)        
@@ -241,11 +260,11 @@ class Application(tk.Tk):
             pass
         
         if self.step == 0:
-            self.move_count["text"] = "Initial puzzle"
+            self.move_count_lbl["text"] = "Initial puzzle"
         elif self.step == self.max_step:
-            self.move_count["text"] = "Puzzle is solved!"
+            self.move_count_lbl["text"] = "Puzzle is solved!"
         else:
-            self.move_count["text"] = f"move #{self.step}"
+            self.move_count_lbl["text"] = f"move #{self.step}"
 
         #may replace following lines with draw_initial_blocks() after modifying it.
         dim = board.dimension()
@@ -278,6 +297,14 @@ class Application(tk.Tk):
 
             self.next_move_btn = tk.Button(master=self.bottom_frame, text="Next Move", command=lambda: [self.increase_step(), self.display_solution_move()])
             self.next_move_btn.grid(row=2, column=2)
+
+    def choose_again(self):
+        self.top_frame.destroy()
+        self.main_frame.destroy()
+        self.middle_frame.destroy()
+        self.bottom_frame.destroy()
+
+        self.display_choose_level_frame()
 
     def increase_step(self):
         self.step += 1
