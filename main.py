@@ -144,45 +144,48 @@ class Application(tk.Tk):
         self.middle_frame = tk.Frame(master=self)
         self.middle_frame.grid(row=3)
 
+        self.bottom_frame = tk.Frame(master=self)
+        self.bottom_frame.grid(row=4)
+
+        #main canvas with board
         self.canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=self.board_size, bg="black")
-        self.canvas.grid(row=2, column=2)
 
         self.left_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=self.board_size, bg="gray")
-        self.left_canvas.grid(row=2, column=1)
-
         self.right_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=self.board_size, bg="gray")
-        self.right_canvas.grid(row=2, column=3)
-
         self.top_canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=PIXELS_PER_SQUARE // 2, bg="gray")
-        self.top_canvas.grid(row=1, column=2)
-
-        self.bottom_canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=PIXELS_PER_SQUARE // 2, bg="gray")
-        self.bottom_canvas.grid(row=3, column=2)    
-
+        self.bottom_canvas = tk.Canvas(master=self.main_frame, width=self.board_size, height=PIXELS_PER_SQUARE // 2, bg="gray")  
         self.top_left_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=PIXELS_PER_SQUARE // 2, bg="gray")
         self.top_right_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=PIXELS_PER_SQUARE // 2, bg="gray")
         self.bottom_left_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=PIXELS_PER_SQUARE // 2, bg="gray")
         self.bottom_right_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=PIXELS_PER_SQUARE // 2, bg="gray")
 
+        self.canvas.grid(row=2, column=2)
+        
+        self.left_canvas.grid(row=2, column=1)
+        self.right_canvas.grid(row=2, column=3)
+        self.top_canvas.grid(row=1, column=2)
+        self.bottom_canvas.grid(row=3, column=2)
         self.top_left_canvas.grid(row=1, column=1)
         self.top_right_canvas.grid(row=1, column=3)
         self.bottom_left_canvas.grid(row=3, column=1)
         self.bottom_right_canvas.grid(row=3, column=3)
 
-        self.bottom_frame = tk.Frame(master=self)
-        self.bottom_frame.grid(row=4)
+        #self.main_frame.columnconfigure(1, pad=10)
+        #self.main_frame.rowconfigure(1, pad=10)
+        #self.main_frame.columnconfigure(0, pad=10)
+        #self.main_frame.rowconfigure(0, pad=10)
+        #self.main_frame.columnconfigure(2, pad=10)
+        #self.main_frame.rowconfigure(2, pad=10)
 
         if puzzle[-3:] == "4x4":
-            self.mode_lbl = tk.Label(master=self.top_frame, text="EASY MODE:")
+            self.mode_lbl = tk.Label(master=self.top_frame, text="EASY MODE:", font=("Arial", LEVEL_FONT_SIZE))
         elif puzzle[-3:] == "5x5":
-            self.mode_lbl = tk.Label(master=self.top_frame, text="INTERMEDIATE MODE:")
+            self.mode_lbl = tk.Label(master=self.top_frame, text="INTERMEDIATE MODE:", font=("Arial", LEVEL_FONT_SIZE))
         elif puzzle[-3:] == "6x6":
-            self.mode_lbl = tk.Label(master=self.top_frame, text="HARD MODE:")
+            self.mode_lbl = tk.Label(master=self.top_frame, text="HARD MODE:", font=("Arial", LEVEL_FONT_SIZE))
         self.mode_lbl.grid(row=1, column=1)
-        self.mode_lbl.config(font=("Arial", LEVEL_FONT_SIZE))
         
-        self.level_lbl = tk.Label(master=self.top_frame, text=f"LEVEL {level}")
-        self.level_lbl.config(font=("Arial", LEVEL_FONT_SIZE))
+        self.level_lbl = tk.Label(master=self.top_frame, text=f"LEVEL {level}", font=("Arial", LEVEL_FONT_SIZE))
         self.level_lbl.grid(row=1, column=2)
 
         self.choose_again_btn = tk.Button(master=self.middle_frame, text="Choose different mode or level", command=self.choose_again)
@@ -253,7 +256,7 @@ class Application(tk.Tk):
                 self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill=block_color )
                 
     def display_full_solution(self):
-        '''Handle display_full_solution_btn clik.'''
+        '''Handle display_full_solution_btn click.'''
         self.display_full_solution_btn.destroy()
 
         board = self.board
@@ -269,7 +272,7 @@ class Application(tk.Tk):
         self.display_solution_move()   
     
     def display_solution_move(self):
-        '''Display board of each solution step, different labels and associated buttons.'''
+        '''Display board from a solution step, different labels and associated buttons.'''
         board = self.solution[self.step] #one board move configuration
 
         #redraw canvas
