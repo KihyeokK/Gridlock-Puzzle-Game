@@ -27,6 +27,7 @@ print(solver.checked_board_positions)
 
 import tkinter as tk
 import os
+import tkinter.dnd
 
 PIXELS_PER_SQUARE = 100
 LEVEL_FONT_SIZE = 20
@@ -160,7 +161,7 @@ class Application(tk.Tk):
         self.bottom_right_canvas = tk.Canvas(master=self.main_frame, width=PIXELS_PER_SQUARE // 2, height=PIXELS_PER_SQUARE // 2, bg="gray")
 
         self.canvas.grid(row=2, column=2)
-        
+
         self.left_canvas.grid(row=2, column=1)
         self.right_canvas.grid(row=2, column=3)
         self.top_canvas.grid(row=1, column=2)
@@ -200,6 +201,7 @@ class Application(tk.Tk):
         self.draw_board_base()
         self.draw_exit()
         self.draw_blocks(self.board)
+        self.attach()
 
 
 
@@ -237,6 +239,7 @@ class Application(tk.Tk):
 
     def draw_blocks(self, board, block_color="yellow"):
         '''Draw the board configuration.'''
+        self.ids = []
         board = board
         dim = board.dimension()
         blocks = board.starting_blocks()
@@ -249,11 +252,14 @@ class Application(tk.Tk):
             x = col * PIXELS_PER_SQUARE
             y = row * PIXELS_PER_SQUARE
             if block == "M":
-                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill="red" )
+                id = self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill="red" )
+                self.ids.append(id)
             elif direction == "horizontal":
-                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill=block_color )
+                id = self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill=block_color )
+                self.ids.append(id)
             elif direction == "vertical":
-                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill=block_color )
+                id = self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill=block_color )
+                self.ids.append(id)
                 
     def display_full_solution(self):
         '''Handle display_full_solution_btn click.'''
@@ -325,6 +331,20 @@ class Application(tk.Tk):
     
     def decrease_step(self):
         self.step -= 1
+
+    
+    def attach(self):
+        for id in self.ids:
+            self.canvas.tag_bind(id, '<ButtonPress-1>', self.press)
+
+    def press(self, event):
+        if tkinter.dnd.dnd_start(self, event):
+            self.x_off = event.x
+            self.y_off = event.y
+            #self.x_orig, self.y_orig = self.canvas.coords(id)
+    
+    def dnd_end(self):
+        pass
 
 
 
