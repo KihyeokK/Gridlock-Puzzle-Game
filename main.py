@@ -201,7 +201,6 @@ class Application(tk.Tk):
         self.draw_board_base()
         self.draw_exit()
         self.draw_blocks(self.board)
-        self.attach()
 
 
 
@@ -239,7 +238,7 @@ class Application(tk.Tk):
 
     def draw_blocks(self, board, block_color="yellow"):
         '''Draw the board configuration.'''
-        self.ids = []
+        self.sources = []
         board = board
         dim = board.dimension()
         blocks = board.starting_blocks()
@@ -253,13 +252,13 @@ class Application(tk.Tk):
             y = row * PIXELS_PER_SQUARE
             if block == "M":
                 id = self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill="red" )
-                self.ids.append(id)
+                Source(id, self.canvas)
             elif direction == "horizontal":
                 id = self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill=block_color )
-                self.ids.append(id)
+                Source(id, self.canvas)
             elif direction == "vertical":
                 id = self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill=block_color )
-                self.ids.append(id)
+                Source(id, self.canvas)
                 
     def display_full_solution(self):
         '''Handle display_full_solution_btn click.'''
@@ -333,18 +332,82 @@ class Application(tk.Tk):
         self.step -= 1
 
     
-    def attach(self):
+    def dnd_motion(self, source, event):
+        x, y = source.where(self.canvas, event)
+        x1, y1, x2, y2 = self.canvas.bbox(source.id)
+        self.canvas.move(source.id, x-x1, y-y1)
+
+    def dnd_accept(self, source, event):
+        return self
+
+    def dnd_enter(self, source, event):
+        self.canvas.focus_set() # Show highlight border
+        self.dnd_motion(source, event)
+
+    '''def attach(self):
         for id in self.ids:
+            self.id = id
             self.canvas.tag_bind(id, '<ButtonPress-1>', self.press)
+
+    def press(self, event):
+        if tkinter.dnd.dnd_start(self.canvas, event):
+            self.x_off = event.x
+            self.y_off = event.y
+            self.x_orig, self.y_orig, x_1, x_2 = self.canvas.coords(self.id)
+    
+    def dnd_end(self, target, event):
+        pass
+
+    def where(self, canvas, event):
+        # where the corner of the canvas is relative to the screen:
+        x_org = canvas.winfo_rootx()
+        y_org = canvas.winfo_rooty()
+        # where the pointer is relative to the canvas widget:
+        x = event.x_root - x_org
+        y = event.y_root - y_org
+        # compensate for initial pointer offset
+        return x - self.x_off, y - self.y_off
+
+    def dnd_motion(self, source, event):
+        x, y = source.where(self.canvas, event)
+        x1, y1, x2, y2 = self.canvas.bbox(self.id)
+        self.canvas.move(self.id, 10, 10)'''
+
+    
+
+class Source:
+    def __init__(self, id, canvas):
+        self.canvas = canvas
+        self.id = id
+        self.attach()
+    
+    def attach(self):
+        self.canvas.tag_bind(self.id, '<ButtonPress-1>', self.press)
 
     def press(self, event):
         if tkinter.dnd.dnd_start(self, event):
             self.x_off = event.x
             self.y_off = event.y
-            #self.x_orig, self.y_orig = self.canvas.coords(id)
+            self.x_orig, self.y_orig, x_2, y_2 = self.canvas.coords(self.id)
     
-    def dnd_end(self):
+    def dnd_end(self, target, event):
         pass
+    
+    def where(self, canvas, event):
+        # where the corner of the canvas is relative to the screen:
+        x_org = canvas.winfo_rootx()
+        y_org = canvas.winfo_rooty()
+        # where the pointer is relative to the canvas widget:
+        x = event.x_root - x_org
+        y = event.y_root - y_org
+        return x - self.x_off, y - self.y_off
+
+    
+    
+    
+
+
+
 
 
 
