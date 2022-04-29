@@ -250,17 +250,19 @@ class Application(tk.Tk):
             col = start_tile % dim
             x = col * PIXELS_PER_SQUARE
             y = row * PIXELS_PER_SQUARE
+            hx1, hy1, hx2, hy2 = x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE
+            vx1, vy1, vx2, vy2 = x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length
             if block == "M":
-                id = self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill="red", tags="horizontal")
-                source = Source(id, self.canvas)
+                id = self.canvas.create_rectangle(hx1, hy1, hx2, hy2, fill="red", tags="horizontal")
+                source = Source(id, self.canvas, hx1, hy1, hx2, hy2, True)
                 source.attach()
             elif direction == "horizontal":
-                id = self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE, fill=block_color, tags="horizontal")
-                source = Source(id, self.canvas)
+                id = self.canvas.create_rectangle(hx1, hy1, hx2, hy2, fill=block_color, tags="horizontal")
+                source = Source(id, self.canvas, hx1, hy1, hx2, hy2, False)
                 source.attach()
             elif direction == "vertical":
-                id = self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length, fill=block_color, tags="vertical")
-                source = Source(id, self.canvas)
+                id = self.canvas.create_rectangle(vx1, vy1, vx2, vy2, fill=block_color, tags="vertical")
+                source = Source(id, self.canvas, vx1, vy1, vx2, vy2, False)
                 source.attach()
                 
     def display_full_solution(self):
@@ -335,6 +337,7 @@ class Application(tk.Tk):
         self.step -= 1
 
     
+    #source is an instance of Source class, containing a canvas item's info
     def dnd_motion(self, source, event):
         x, y = source.where(self.canvas, event)
         x1, y1, x2, y2 = self.canvas.bbox(source.dndid)
@@ -349,6 +352,10 @@ class Application(tk.Tk):
 
     def dnd_enter(self, source, event):
         self.canvas.focus_set() # Show highlight border
+        x1, y1, x2, y2 = source.canvas.bbox(source.dndid)
+        dx, dy = x2-x1, y2-y1
+        #for rectangle drawing
+
         self.dnd_motion(source, event)
 
     def dnd_commit(self, source, event):
@@ -356,13 +363,25 @@ class Application(tk.Tk):
         x, y = source.where(self.canvas, event)
     
     def dnd_leave(self, source, event):
+        x, y = source.where(self.canvas, event)
         self.canvas.delete(source.dndid)
         self.dndid = None
+        #for rectangle drawing
+        rx1, ry1, rx2, ry2  = source.x1, source.y1, source.x2, source.y2
+
+        block_width = rx2-rx1
+        block_height = ry2-ry1
+
+        self.dndid = self.canvas.create_rectangle(event.x, event.y, event.x+(block_width), event.y+(block_height),  fill="silver")
+        source.dndid = self.dndid #updating the source object
+        source.attach()
 
 class Source:
-    def __init__(self, id, canvas):
+    def __init__(self, id, canvas, x1, y1, x2, y2, main_block):
+        self.x1, self.y1, self.x2, self.y2 = x1, y1, x2, y2
         self.canvas = canvas
         self.dndid = id
+        self.main_block = main_block #True if the block is main block
     
     def attach(self):
         self.canvas.tag_bind(self.dndid, '<ButtonPress-1>', self.press)
@@ -386,6 +405,7 @@ class Source:
         return x - self.x_off, y - self.y_off
 
     
+    #need to adjust x_off, y_off, x and y positioning of the blocks
     
     
 
