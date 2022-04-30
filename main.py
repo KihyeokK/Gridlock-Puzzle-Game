@@ -352,9 +352,6 @@ class Application(tk.Tk):
 
     def dnd_enter(self, source, event):
         self.canvas.focus_set() # Show highlight border
-        x1, y1, x2, y2 = source.canvas.bbox(source.dndid)
-        dx, dy = x2-x1, y2-y1
-        #for rectangle drawing
 
         self.dnd_motion(source, event)
 
@@ -363,7 +360,8 @@ class Application(tk.Tk):
         x, y = source.where(self.canvas, event)
     
     def dnd_leave(self, source, event):
-        x, y = source.where(self.canvas, event)
+        #x, y = source.where(self.canvas, event)
+        x1, y1, x2, y2 = self.canvas.coords(source.dndid)
         self.canvas.delete(source.dndid)
         self.dndid = None
         #for rectangle drawing
@@ -372,7 +370,7 @@ class Application(tk.Tk):
         block_width = rx2-rx1
         block_height = ry2-ry1
 
-        self.dndid = self.canvas.create_rectangle(event.x, event.y, event.x+(block_width), event.y+(block_height),  fill="silver")
+        self.dndid = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver")
         source.dndid = self.dndid #updating the source object
         source.attach()
 
@@ -388,9 +386,9 @@ class Source:
 
     def press(self, event):
         if tkinter.dnd.dnd_start(self, event):
-            self.x_off = event.x
-            self.y_off = event.y
-            self.x_orig, self.y_orig, x_2, y_2 = self.canvas.coords(self.dndid)
+            x1, y1, x2, y2 = self.canvas.bbox(self.dndid)
+            self.x_off = event.x - x1 #x position of pointer - x position of block
+            self.y_off = event.y - y1
     
     def dnd_end(self, target, event):
         pass
