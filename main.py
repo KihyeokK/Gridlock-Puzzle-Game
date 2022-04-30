@@ -253,7 +253,7 @@ class Application(tk.Tk):
             hx1, hy1, hx2, hy2 = x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE
             vx1, vy1, vx2, vy2 = x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length
             if block == "M":
-                id = self.canvas.create_rectangle(hx1, hy1, hx2, hy2, fill="red", tags="horizontal")
+                id = self.canvas.create_rectangle(hx1, hy1, hx2, hy2, fill="red", tags="main")
                 source = Source(id, self.canvas, hx1, hy1, hx2, hy2, True)
                 source.attach()
             elif direction == "horizontal":
@@ -342,7 +342,7 @@ class Application(tk.Tk):
         x, y = source.where(self.canvas, event)
         x1, y1, x2, y2 = self.canvas.bbox(source.dndid)
         block_tag = self.canvas.gettags(source.dndid) #block_tag is a list of all the tags of a canvas object
-        if block_tag[0] == "horizontal":
+        if block_tag[0] == "horizontal" or block_tag[0] == "main":
             self.canvas.move(source.dndid, x-x1, 0)
         elif block_tag[0] == "vertical":
             self.canvas.move(source.dndid, 0, y-y1)
@@ -369,9 +369,13 @@ class Application(tk.Tk):
 
         block_width = rx2-rx1
         block_height = ry2-ry1
-
-        self.new_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
-        source.dndid = self.new_block_id #updating the source object
+        if block_tag[0] == "main":
+            self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="red", tags=f"{block_tag[0]}")
+        elif block_tag[0] == "horizontal":
+            self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+        elif block_tag[0] == "vertical":
+            self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+        source.dndid = self.moved_block_id #updating the source object
         source.attach()
 
 class Source:
