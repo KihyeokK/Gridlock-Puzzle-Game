@@ -362,16 +362,16 @@ class Application(tk.Tk):
     def dnd_leave(self, source, event):
         #x, y = source.where(self.canvas, event)
         x1, y1, x2, y2 = self.canvas.coords(source.dndid)
+        block_tag = self.canvas.gettags(source.dndid)
         self.canvas.delete(source.dndid)
-        self.dndid = None
         #for rectangle drawing
         rx1, ry1, rx2, ry2  = source.x1, source.y1, source.x2, source.y2
 
         block_width = rx2-rx1
         block_height = ry2-ry1
 
-        self.dndid = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver")
-        source.dndid = self.dndid #updating the source object
+        self.new_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+        source.dndid = self.new_block_id #updating the source object
         source.attach()
 
 class Source:
@@ -402,8 +402,6 @@ class Source:
         y = event.y_root - y_org
         return x - self.x_off, y - self.y_off
 
-    
-    #need to adjust x_off, y_off, x and y positioning of the blocks
     
     
 
