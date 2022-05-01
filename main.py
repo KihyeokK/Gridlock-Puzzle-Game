@@ -198,6 +198,10 @@ class Application(tk.Tk):
         self.display_full_solution_btn = tk.Button(master=self.bottom_frame, text="Show Full Solution", command=self.display_full_solution)
         self.display_full_solution_btn.grid(row=2)
 
+        self.player_move = 0
+        self.player_move_lbl = tk.Label(self.middle_frame, text=f"Moves: {self.player_move}")
+        self.player_move_lbl.grid(row=1)
+
         self.draw_board_base()
         self.draw_exit()
         self.draw_blocks(self.board)
@@ -377,6 +381,11 @@ class Application(tk.Tk):
             self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
         source.dndid = self.moved_block_id #updating the source object
         source.attach()
+        
+        self.player_move += 1
+        self.player_move_lbl.destroy()
+        self.player_move_lbl = tk.Label(self.middle_frame, text=f"Moves: {self.player_move}")
+        self.player_move_lbl.grid(row=1)
 
 class Source:
     def __init__(self, id, canvas, x1, y1, x2, y2, main_block):
