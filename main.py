@@ -7,6 +7,7 @@ import tkinter.dnd
 PIXELS_PER_SQUARE = 100
 LEVEL_FONT_SIZE = 20
 MODE_FONT_SIZE = 30
+BLOCK_GAP = 5
 
 class Application(tk.Tk):
     def __init__(self):
@@ -191,7 +192,7 @@ class Application(tk.Tk):
             for col in range(dim):
                 x = col * PIXELS_PER_SQUARE
                 y = row * PIXELS_PER_SQUARE
-                self.canvas.create_rectangle(x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE, fill="gray")
+                self.canvas.create_rectangle(x + BLOCK_GAP, y + BLOCK_GAP, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE, fill="gray")
         
     def draw_exit(self):
         '''Draw exit based on main block's position'''
@@ -207,12 +208,12 @@ class Application(tk.Tk):
             row = start_tile // dim
             x = 0
             y = row * PIXELS_PER_SQUARE
-            self.right_canvas.create_rectangle(x, y, x + PIXELS_PER_SQUARE // 2 + 5, y + PIXELS_PER_SQUARE + 5, fill="white")
+            self.right_canvas.create_rectangle(x, y, x + PIXELS_PER_SQUARE // 2 + BLOCK_GAP, y + PIXELS_PER_SQUARE + BLOCK_GAP, fill="white")
         elif direction == "vertical":
             col = start_tile // dim
             x = col * PIXELS_PER_SQUARE
             y = 0
-            self.bottom_canvas.create_rectangle(x, y, x + PIXELS_PER_SQUARE + 5, y + PIXELS_PER_SQUARE // 2 + 5, fill="white")
+            self.bottom_canvas.create_rectangle(x, y, x + PIXELS_PER_SQUARE + BLOCK_GAP, y + PIXELS_PER_SQUARE // 2 + BLOCK_GAP, fill="white")
             
 
     def draw_blocks(self, board, block_color="yellow"):
@@ -229,8 +230,8 @@ class Application(tk.Tk):
             col = start_tile % dim
             x = col * PIXELS_PER_SQUARE
             y = row * PIXELS_PER_SQUARE
-            hx1, hy1, hx2, hy2 = x + 5, y + 5, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE
-            vx1, vy1, vx2, vy2 = x + 5, y + 5, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length
+            hx1, hy1, hx2, hy2 = x + BLOCK_GAP, y + BLOCK_GAP, x + PIXELS_PER_SQUARE * block_length, y + PIXELS_PER_SQUARE
+            vx1, vy1, vx2, vy2 = x + BLOCK_GAP, y + BLOCK_GAP, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length
             if block == "M":
                 id = self.canvas.create_rectangle(hx1, hy1, hx2, hy2, fill="red", tags="main")
                 source = Source(id, self.canvas, hx1, hy1, hx2, hy2, True)
@@ -339,13 +340,25 @@ class Application(tk.Tk):
     def dnd_leave(self, source, event):
         #x, y = source.where(self.canvas, event)
         x1, y1, x2, y2 = self.canvas.coords(source.dndid)
+        print(x1,y1,x2,y2)
         block_tag = self.canvas.gettags(source.dndid)
         self.canvas.delete(source.dndid)
-        #for rectangle drawing
-        rx1, ry1, rx2, ry2  = source.x1, source.y1, source.x2, source.y2
 
-        block_width = rx2-rx1
-        block_height = ry2-ry1
+        #handle block positioning when the moved position is out of the board size.
+        if x1 < 0:
+            block_length = x2-x1
+            x1, x2 = BLOCK_GAP, block_length + BLOCK_GAP
+        elif y1 < 0:
+            block_length = y2-y1
+            y1, y2 = BLOCK_GAP, block_length + BLOCK_GAP
+        elif x2 > self.board_size:
+            block_length = x2-x1
+            x1, x2 = self.board_size - block_length, self.board_size
+        elif y2 > self.board_size:
+            block_length = y2-y1
+            y1, y2 = self.board_size - block_length, self.board_size
+
+        #for rectangle drawing
         if block_tag[0] == "main":
             self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="red", tags=f"{block_tag[0]}")
         elif block_tag[0] == "horizontal":
