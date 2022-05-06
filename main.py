@@ -234,15 +234,15 @@ class Application(tk.Tk):
             vx1, vy1, vx2, vy2 = x + BLOCK_GAP, y + BLOCK_GAP, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length
             if block == "M":
                 id = self.canvas.create_rectangle(hx1, hy1, hx2, hy2, fill="red", tags="main")
-                source = Source(id, self.canvas, hx1, hy1, hx2, hy2, True)
+                source = Source(id, self.canvas, True, board.occupied_tiles, block_length, dim)
                 source.attach()
             elif direction == "horizontal":
                 id = self.canvas.create_rectangle(hx1, hy1, hx2, hy2, fill=block_color, tags="horizontal")
-                source = Source(id, self.canvas, hx1, hy1, hx2, hy2, False)
+                source = Source(id, self.canvas, False, board.occupied_tiles, block_length, dim)
                 source.attach()
             elif direction == "vertical":
                 id = self.canvas.create_rectangle(vx1, vy1, vx2, vy2, fill=block_color, tags="vertical")
-                source = Source(id, self.canvas, vx1, vy1, vx2, vy2, False)
+                source = Source(id, self.canvas, False, board.occupied_tiles, block_length, dim)
                 source.attach()
                 
     def display_full_solution(self):
@@ -319,11 +319,47 @@ class Application(tk.Tk):
     
     #source is an instance of Source class, containing a canvas item's info
     def dnd_motion(self, source, event):
+        full_occupied_tiles = source.full_occupied_tiles
+
+        initial_occupied_tiles = source.initial_occupied_tiles    
+
+        #remove initially occupied tiles from full occupied tiles list
+        for tile in initial_occupied_tiles:
+            try:
+                full_occupied_tiles.remove(tile)
+            except Exception:
+                pass
+
         x, y = source.where(self.canvas, event)
         x1, y1, x2, y2 = self.canvas.bbox(source.dndid)
+
+        moved_x_tile_position = x1 // PIXELS_PER_SQUARE
+        moved_y_tile_position = y1 // PIXELS_PER_SQUARE
+
+        #convert to tile_index for 1D representation of the board
+        tile_index = moved_y_tile_position * source.dim + moved_x_tile_position
+
+        #get all of occupied tiles for moved block 
+        moved_occupied_tiles = [tile_index + i for i in range(source.block_length)]  
+        print(moved_occupied_tiles)
+
+        max_dx = (abs(moved_occupied_tiles[0] - initial_occupied_tiles[0]) - 1)*PIXELS_PER_SQUARE
+
         block_tag = self.canvas.gettags(source.dndid) #block_tag is a list of all the tags of a canvas object
+
+        is_occupied = False
         if block_tag[0] == "horizontal" or block_tag[0] == "main":
-            self.canvas.move(source.dndid, x-x1, 0)
+            for tile in moved_occupied_tiles:
+                if tile in full_occupied_tiles:
+                    is_occupied = True
+                    break
+            tile_x_position = ((tile+1) % source.dim) * PIXELS_PER_SQUARE
+            print(x)
+            print(tile_x_position)
+            if is_occupied:
+                self.canvas.move(source.dndid, ((x//PIXELS_PER_SQUARE+1) *PIXELS_PER_SQUARE-tile_x_position), 0)
+            else:
+                self.canvas.move(source.dndid, (x//PIXELS_PER_SQUARE +1)*PIXELS_PER_SQUARE-x1//PIXELS_PER_SQUARE*PIXELS_PER_SQUARE, 0)
         elif block_tag[0] == "vertical":
             self.canvas.move(source.dndid, 0, y-y1)
 
@@ -346,7 +382,7 @@ class Application(tk.Tk):
 
         #handle block positioning when the moved position is out of the board size.
         if x1 < 0:
-            block_length = x2-x1
+            block_length = x2-x1 #block length in terms of canvas coordinates
             x1, x2 = BLOCK_GAP, block_length + BLOCK_GAP
         elif y1 < 0:
             block_length = y2-y1
@@ -374,11 +410,27 @@ class Application(tk.Tk):
         self.player_move_lbl.grid(row=1)
 
 class Source:
-    def __init__(self, id, canvas, x1, y1, x2, y2, main_block):
-        self.x1, self.y1, self.x2, self.y2 = x1, y1, x2, y2
+    def __init__(self, id, canvas, main_block, occupied_tiles, block_length, dimension):
         self.canvas = canvas
         self.dndid = id
         self.main_block = main_block #True if the block is main block
+        self.full_occupied_tiles = occupied_tiles #every occupied tiles
+        self.block_length = block_length #block length in terms of number of occupied tiles for one block
+        self.dim = dimension
+        print(occupied_tiles)
+
+        x1, y1, x2, y2 = self.canvas.bbox(self.dndid)
+
+        initial_x_tile_position = x1 // PIXELS_PER_SQUARE
+        initial_y_tile_position = y1 // PIXELS_PER_SQUARE
+
+        #convert to tile_index for 1D representation of the board
+        tile_index = initial_y_tile_position * self.dim + initial_x_tile_position
+
+        #get all of initially occupied tiles for one block
+        self.initial_occupied_tiles = [tile_index + i for i in range(self.block_length)]  
+        print(self.initial_occupied_tiles)
+
     
     def attach(self):
         self.canvas.tag_bind(self.dndid, '<ButtonPress-1>', self.press)
