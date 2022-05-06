@@ -1,30 +1,5 @@
 from Board import Board
 from Solver import Solver
-
-#file_name = input("file name? ")
-
-
-
-fp1 = open(f"puzzles/puzzle6x6/board6x6-3.txt")
-fp2 = open(f"puzzles/puzzle6x6-sol/board6x6-3-sol.txt")
-initial, goal = "", ""
-for line in fp1.readlines():
-    initial += line #constructing a string containing all the lines
-for line in fp2.readlines():
-    goal += line
-board = Board(initial, goal)
-
-solver = Solver(board) #passing the initial board
-
-
-print(f"Minimum number of moves = {solver.moves()}")
-for i, board_position in enumerate(solver.solution()):
-    print(f"\nMove # {i}")
-    print(board_position)
-print(solver.checked_board_positions)
-
-#---------------------------------
-
 import tkinter as tk
 import os
 import tkinter.dnd
@@ -355,8 +330,6 @@ class Application(tk.Tk):
         return self
 
     def dnd_enter(self, source, event):
-        self.canvas.focus_set() # Show highlight border
-
         self.dnd_motion(source, event)
 
     def dnd_commit(self, source, event):
@@ -380,8 +353,8 @@ class Application(tk.Tk):
         elif block_tag[0] == "vertical":
             self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
         source.dndid = self.moved_block_id #updating the source object
-        source.attach()
-        
+        source.attach()   
+
         self.player_move += 1
         self.player_move_lbl.destroy()
         self.player_move_lbl = tk.Label(self.middle_frame, text=f"Moves: {self.player_move}")
