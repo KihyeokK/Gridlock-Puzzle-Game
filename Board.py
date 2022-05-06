@@ -33,6 +33,10 @@ class Board(object):
         self.blocks = blocks #make private
         self.occupied_tiles = occupied_tiles
 
+        #for heuristic
+        self.m = True
+        self.wm = False
+
     def neighbors(self):
         '''Return a list of all the neighbor boards the current board can accesss'''
         neighbors = []
@@ -166,6 +170,17 @@ class Board(object):
         return board
 
     def heuristic(self):
+        if self.m:
+            h = self.manhattan()
+            return h
+        elif self.wm:
+            h = self.weighted_manhattan()
+            return h
+        else:
+            h = self.manhattan() #default heuristic
+            return h
+
+    def manhattan(self):
         '''Compute manhattan distance using only head tiles of respective blocks.
         horizontal blocks will have dy=0 and vertical blocks will have dx=0.'''
         count = 0
@@ -174,15 +189,14 @@ class Board(object):
         for tile in blocks:
             dx_or_dy = abs(blocks[tile][0][0] - goal_blocks[tile][0]) #only head tile needed
             count += dx_or_dy
-        
-        return count 
 
-    def weighted_heuristic(self):
+        return count
+
+    def weighted_manhattan(self):
         count = self.heuristic()
 
         return count * 0.2
             
-
     def solved(self):
         '''Return True if the board is solved.'''
         return self.heuristic() == 0
@@ -194,10 +208,6 @@ class Board(object):
     def starting_blocks(self):
         '''Retrun starting blocks configuration'''
         return self.blocks
-
-
-            
-    #def create_2D_board():
 
     def __repr__(self):
         dim = self.__dim
