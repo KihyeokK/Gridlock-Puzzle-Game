@@ -74,4 +74,4 @@ class MinPQ(list):
 
 pq = MinPQ()
 pq.insert(1)
-print(pq._lchild(2))
+#print(pq._lchild(2))
