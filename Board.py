@@ -34,8 +34,8 @@ class Board(object):
         self.occupied_tiles = occupied_tiles
 
         #for heuristic
-        self.m = True
-        self.wm = False
+        self.m = False
+        self.wm = True
 
     def neighbors(self):
         '''Return a list of all the neighbor boards the current board can accesss'''
@@ -193,7 +193,7 @@ class Board(object):
         return count
 
     def weighted_manhattan(self):
-        count = self.heuristic()
+        count = self.manhattan()
 
         return count * 0.2
             

@@ -14,7 +14,7 @@ def heuristic_test():
     for line in sol_file.readlines():
         goal += line
 
-    board = Board(initial, goal)
+    board = Board(initial, goal)    
     solver = Solver(board) #passing the initial board
 
     print(f"Minimum number of moves = {solver.moves()}")
@@ -23,18 +23,5 @@ def heuristic_test():
         print(f"{board_position}")
     print(f"\n{solver.checked_board_positions} board positions checked.")
 
-def main_test():
-    heuristic = input("Choose heuristic. Type a single integer, 1 or 2:\n1.Manhattan Distance \n2.Weighted Manhattan Distance \n")
-    if heuristic == "1":
-        Board.m = True
-        Board.wm = False
-        heuristic_test()
-    elif heuristic == "2":
-        Board.m = False
-        Board.wm = True
-        heuristic_test()
-    else:
-        raise Exception("Please enter a single integer, 1 or 2.")
-
 if __name__ == "__main__":
-    main_test()
+    heuristic_test()
