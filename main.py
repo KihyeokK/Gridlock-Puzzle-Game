@@ -1,3 +1,4 @@
+from turtle import Turtle
 from Board import Board
 from Solver import Solver
 import tkinter as tk
@@ -9,6 +10,7 @@ PIXELS_PER_SQUARE = 100
 LEVEL_FONT_SIZE = 20
 MODE_FONT_SIZE = 30
 BLOCK_GAP = 5
+ADJUSTMENT_TOLERANCE = 40
 
 class Application(tk.Tk):
     def __init__(self):
@@ -336,7 +338,8 @@ class Application(tk.Tk):
         moved_head_tile_x = x1 // PIXELS_PER_SQUARE
         moved_head_tile_y = y1 // PIXELS_PER_SQUARE
 
-        if x1 < 0: #if moved block is out of canvas
+        #if moved block is out of canvas
+        if x1 < 0: 
             moved_head_tile_x = 0
         if y1 < 0:
             moved_head_tile_y = 0
@@ -344,23 +347,31 @@ class Application(tk.Tk):
         #convert to tile_index for 1D representation of the board
         tile_index = moved_head_tile_y * source.dim + moved_head_tile_x
 
-        #get all of occupied tiles for moved block 
+        #get all of occupied tiles for one moved block 
         block_tag = source.block_tag #block_tag is a list of all the tags of a canvas object
         if block_tag[0] == "horizontal" or block_tag[0] == "main":
             source.moved_occupied_tiles = [tile_index + i for i in range(source.block_length)] 
         elif block_tag[0] == "vertical":
             source.moved_occupied_tiles = [tile_index + i*source.dim for i in range(source.block_length)] 
-             
-        for tile in initial_occupied_tiles:
-            try:
-                full_occupied_tiles.append(tile)
-            except Exception:
-                pass
+
 
         print("moved occupied tiles:", source.moved_occupied_tiles)
+
+        self.left_should_move_back = False #for leftward movement
+        self.right_should_move_back = False #for rightward movement
         if block_tag[0] == "horizontal" or block_tag[0] == "main":
-            #self.canvas.move(source.dndid, (x//PIXELS_PER_SQUARE +1)*PIXELS_PER_SQUARE-x1//PIXELS_PER_SQUARE*PIXELS_PER_SQUARE, 0)
+            for tile in source.moved_occupied_tiles:
+                if tile in full_occupied_tiles:
+                    self.left_should_move_back = True
+                    break 
+            for tile in source.moved_occupied_tiles:
+                if tile+1 in full_occupied_tiles:
+                    self.right_should_move_back = True
+                    break
             self.canvas.move(source.dndid, x-x1, 0)
+            #tile_x_position = ((tile+1) % source.dim) * PIXELS_PER_SQUARE
+            #print("tile x:", tile_x_position)
+            #self.canvas.move(source.dndid, (x//PIXELS_PER_SQUARE +1)*PIXELS_PER_SQUARE-x1//PIXELS_PER_SQUARE*PIXELS_PER_SQUARE, 0)
         elif block_tag[0] == "vertical":
             self.canvas.move(source.dndid, 0, y-y1)
 
@@ -375,8 +386,9 @@ class Application(tk.Tk):
         x, y = source.where(self.canvas, event)
     
     def dnd_leave(self, source, event):
-        #x, y = source.where(self.canvas, event)
+        x, y = source.where(self.canvas, event)
         x1, y1, x2, y2 = self.canvas.coords(source.dndid)
+        print("x:", x)
         print(x1,y1,x2,y2)
         block_tag = source.block_tag
         self.canvas.delete(source.dndid)
@@ -396,24 +408,64 @@ class Application(tk.Tk):
             y1, y2 = self.board_size - block_length, self.board_size
 
         #for rectangle drawing
+        ix1, iy1, ix2, iy2 = source.block_coords #initial coords
+        print("x1: ", x1)
+        print("ix1: ", ix1, iy1, ix2, iy2)
         if block_tag[0] == "main":
             self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="red", tags=f"{block_tag[0]}")
         elif block_tag[0] == "horizontal" or block_tag[0] == "main":
             print("moved:", source.moved_occupied_tiles)
             print("initial occupied tiles", source.initial_occupied_tiles)
-            if source.moved_occupied_tiles[0] in source.full_occupied_tiles and not source.moved_occupied_tiles[0] in source.initial_occupied_tiles: #if not in initial occupied position and not 
+            #if any of the tiles occupied by the moved block overlaps with any other block, don't allow any movement, since it is an illegal move.
+            # 
+            if any([(source.moved_occupied_tiles[0+i] in source.full_occupied_tiles) for i in range(source.block_length)]) and ix1-abs(x1) > 0: #if movement is leftward
+                #reinsert initially occupied tiles for overlapping handling
+                for tile in source.initial_occupied_tiles:
+                    try:
+                        source.full_occupied_tiles.append(tile)
+                    except Exception:
+                        pass
+                source.full_occupied_tiles = sorted(source.full_occupied_tiles) #should be sorted to get correct overlapping tile
+                print('leftward movement')
                 overlapping_tile_i = source.initial_occupied_tile_head_i#first encountered occupied tile
                 print("overlapping tile index:", overlapping_tile_i)
-                source.full_occupied_tiles = sorted(source.full_occupied_tiles) #sort
                 print("full occupied list:", source.full_occupied_tiles)
                 overlapping_tile = source.full_occupied_tiles[overlapping_tile_i-1]
                 print("overlapping tile:", overlapping_tile)
+                overlap_x1 = (overlapping_tile) % source.dim * PIXELS_PER_SQUARE
+                overlap_x2 = (overlapping_tile) % source.dim * PIXELS_PER_SQUARE + PIXELS_PER_SQUARE
                 adjusted_x1 = (overlapping_tile+1) % source.dim * PIXELS_PER_SQUARE + BLOCK_GAP
                 adjusted_x2 = (overlapping_tile+1) % source.dim * PIXELS_PER_SQUARE + source.block_length * PIXELS_PER_SQUARE
                 print("adj:", adjusted_x1)
-                self.moved_block_id = self.canvas.create_rectangle(adjusted_x1, y1, adjusted_x2, y2,  fill="silver", tags=f"{block_tag[0]}")
-            #elif source.moved_occupied_tiles[-1]
-            else:    
+                if self.left_should_move_back and abs(overlap_x2 - x1) > ADJUSTMENT_TOLERANCE:
+                    self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill="silver", tags=f"{block_tag[0]}")
+                    self.player_move -= 1 #so that it doesn't change. (Since it's an illegal move)
+                else:
+                    print("adjusted movement")
+                    self.moved_block_id = self.canvas.create_rectangle(adjusted_x1, y1, adjusted_x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+            elif any([(source.moved_occupied_tiles[-1-i] + 1 in source.full_occupied_tiles) for i in range(source.block_length)]) and ix1-abs(x1) < 0: #for rightward movement
+                for tile in source.initial_occupied_tiles:
+                    try:
+                        source.full_occupied_tiles.append(tile)
+                    except Exception:
+                        pass
+                source.full_occupied_tiles = sorted(source.full_occupied_tiles) #sort
+                print('rightward movement')
+                overlapping_tile_i = source.initial_occupied_tile_tail_i
+                overlapping_tile = source.full_occupied_tiles[overlapping_tile_i+1]
+                overlap_x1 = (overlapping_tile) % source.dim * PIXELS_PER_SQUARE
+                overlap_x2 = (overlapping_tile) % source.dim * PIXELS_PER_SQUARE + PIXELS_PER_SQUARE
+                adjusted_x1 = (overlapping_tile - source.block_length) % source.dim * PIXELS_PER_SQUARE + BLOCK_GAP
+                adjusted_x2 = (overlapping_tile - source.block_length) % source.dim * PIXELS_PER_SQUARE + source.block_length * PIXELS_PER_SQUARE
+                if self.right_should_move_back and abs(overlap_x1 - x2) > ADJUSTMENT_TOLERANCE:
+                    ix1, iy1, ix2, iy2 = source.block_coords #initial coords
+                    self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill="silver", tags=f"{block_tag[0]}")
+                    self.player_move -= 1 #so that it doesn't change. (Since it's an illegal move)
+                else:
+                    print("adjusted movement")
+                    self.moved_block_id = self.canvas.create_rectangle(adjusted_x1, y1, adjusted_x2, y2,  fill="silver", tags=f"{block_tag[0]}")          
+            else: 
+                print("normal movement")   
                 self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
         elif block_tag[0] == "vertical":
             self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
@@ -434,7 +486,7 @@ class Source:
         self.block_length = block_length #block length in terms of number of occupied tiles for one block
         self.dim = dimension
         self.block_tag = self.canvas.gettags(self.dndid) #block_tag is a list of all the tags of a canvas object
-        print("occupied:", occupied_tiles)
+        print("occupied:", self.full_occupied_tiles)
         print(self.block_tag[0])
 
         x1, y1, x2, y2 = self.canvas.bbox(self.dndid)
@@ -457,7 +509,9 @@ class Source:
 
         print('head', self.initial_occupied_tile_head_i) 
 
-    
+        self.block_coords = (x1+1, y1+1, x2-1, y2-1) #bbox makes -1 pixel difference #needs to be updated when new position 
+        print("self.block_coords: ", self.block_coords)
+
     def attach(self):
         self.canvas.tag_bind(self.dndid, '<ButtonPress-1>', self.press)
 
