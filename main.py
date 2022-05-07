@@ -3,6 +3,7 @@ from Solver import Solver
 import tkinter as tk
 import os
 import tkinter.dnd
+import copy
 
 PIXELS_PER_SQUARE = 100
 LEVEL_FONT_SIZE = 20
@@ -320,7 +321,6 @@ class Application(tk.Tk):
     #source is an instance of Source class, containing a canvas item's info
     def dnd_motion(self, source, event):
         full_occupied_tiles = source.full_occupied_tiles
-
         initial_occupied_tiles = source.initial_occupied_tiles    
 
         #remove initially occupied tiles from full occupied tiles list
@@ -333,33 +333,34 @@ class Application(tk.Tk):
         x, y = source.where(self.canvas, event)
         x1, y1, x2, y2 = self.canvas.bbox(source.dndid)
 
-        moved_x_tile_position = x1 // PIXELS_PER_SQUARE
-        moved_y_tile_position = y1 // PIXELS_PER_SQUARE
+        moved_head_tile_x = x1 // PIXELS_PER_SQUARE
+        moved_head_tile_y = y1 // PIXELS_PER_SQUARE
+
+        if x1 < 0: #if moved block is out of canvas
+            moved_head_tile_x = 0
+        if y1 < 0:
+            moved_head_tile_y = 0
 
         #convert to tile_index for 1D representation of the board
-        tile_index = moved_y_tile_position * source.dim + moved_x_tile_position
+        tile_index = moved_head_tile_y * source.dim + moved_head_tile_x
 
         #get all of occupied tiles for moved block 
-        moved_occupied_tiles = [tile_index + i for i in range(source.block_length)]  
-        print(moved_occupied_tiles)
-
-        max_dx = (abs(moved_occupied_tiles[0] - initial_occupied_tiles[0]) - 1)*PIXELS_PER_SQUARE
-
-        block_tag = self.canvas.gettags(source.dndid) #block_tag is a list of all the tags of a canvas object
-
-        is_occupied = False
+        block_tag = source.block_tag #block_tag is a list of all the tags of a canvas object
         if block_tag[0] == "horizontal" or block_tag[0] == "main":
-            for tile in moved_occupied_tiles:
-                if tile in full_occupied_tiles:
-                    is_occupied = True
-                    break
-            tile_x_position = ((tile+1) % source.dim) * PIXELS_PER_SQUARE
-            print(x)
-            print(tile_x_position)
-            if is_occupied:
-                self.canvas.move(source.dndid, ((x//PIXELS_PER_SQUARE+1) *PIXELS_PER_SQUARE-tile_x_position), 0)
-            else:
-                self.canvas.move(source.dndid, (x//PIXELS_PER_SQUARE +1)*PIXELS_PER_SQUARE-x1//PIXELS_PER_SQUARE*PIXELS_PER_SQUARE, 0)
+            source.moved_occupied_tiles = [tile_index + i for i in range(source.block_length)] 
+        elif block_tag[0] == "vertical":
+            source.moved_occupied_tiles = [tile_index + i*source.dim for i in range(source.block_length)] 
+             
+        for tile in initial_occupied_tiles:
+            try:
+                full_occupied_tiles.append(tile)
+            except Exception:
+                pass
+
+        print("moved occupied tiles:", source.moved_occupied_tiles)
+        if block_tag[0] == "horizontal" or block_tag[0] == "main":
+            #self.canvas.move(source.dndid, (x//PIXELS_PER_SQUARE +1)*PIXELS_PER_SQUARE-x1//PIXELS_PER_SQUARE*PIXELS_PER_SQUARE, 0)
+            self.canvas.move(source.dndid, x-x1, 0)
         elif block_tag[0] == "vertical":
             self.canvas.move(source.dndid, 0, y-y1)
 
@@ -377,7 +378,7 @@ class Application(tk.Tk):
         #x, y = source.where(self.canvas, event)
         x1, y1, x2, y2 = self.canvas.coords(source.dndid)
         print(x1,y1,x2,y2)
-        block_tag = self.canvas.gettags(source.dndid)
+        block_tag = source.block_tag
         self.canvas.delete(source.dndid)
 
         #handle block positioning when the moved position is out of the board size.
@@ -397,8 +398,23 @@ class Application(tk.Tk):
         #for rectangle drawing
         if block_tag[0] == "main":
             self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="red", tags=f"{block_tag[0]}")
-        elif block_tag[0] == "horizontal":
-            self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+        elif block_tag[0] == "horizontal" or block_tag[0] == "main":
+            print("moved:", source.moved_occupied_tiles)
+            print("initial occupied tiles", source.initial_occupied_tiles)
+            if source.moved_occupied_tiles[0] in source.full_occupied_tiles and not source.moved_occupied_tiles[0] in source.initial_occupied_tiles: #if not in initial occupied position and not 
+                overlapping_tile_i = source.initial_occupied_tile_head_i#first encountered occupied tile
+                print("overlapping tile index:", overlapping_tile_i)
+                source.full_occupied_tiles = sorted(source.full_occupied_tiles) #sort
+                print("full occupied list:", source.full_occupied_tiles)
+                overlapping_tile = source.full_occupied_tiles[overlapping_tile_i-1]
+                print("overlapping tile:", overlapping_tile)
+                adjusted_x1 = (overlapping_tile+1) % source.dim * PIXELS_PER_SQUARE + BLOCK_GAP
+                adjusted_x2 = (overlapping_tile+1) % source.dim * PIXELS_PER_SQUARE + source.block_length * PIXELS_PER_SQUARE
+                print("adj:", adjusted_x1)
+                self.moved_block_id = self.canvas.create_rectangle(adjusted_x1, y1, adjusted_x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+            #elif source.moved_occupied_tiles[-1]
+            else:    
+                self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
         elif block_tag[0] == "vertical":
             self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
         source.dndid = self.moved_block_id #updating the source object
@@ -417,7 +433,9 @@ class Source:
         self.full_occupied_tiles = occupied_tiles #every occupied tiles
         self.block_length = block_length #block length in terms of number of occupied tiles for one block
         self.dim = dimension
-        print(occupied_tiles)
+        self.block_tag = self.canvas.gettags(self.dndid) #block_tag is a list of all the tags of a canvas object
+        print("occupied:", occupied_tiles)
+        print(self.block_tag[0])
 
         x1, y1, x2, y2 = self.canvas.bbox(self.dndid)
 
@@ -428,8 +446,16 @@ class Source:
         tile_index = initial_y_tile_position * self.dim + initial_x_tile_position
 
         #get all of initially occupied tiles for one block
-        self.initial_occupied_tiles = [tile_index + i for i in range(self.block_length)]  
-        print(self.initial_occupied_tiles)
+        if self.block_tag[0] == "horizontal" or self.block_tag[0] == "main":
+            self.initial_occupied_tiles = [tile_index + i for i in range(self.block_length)]
+        elif self.block_tag[0] == "vertical":
+            self.initial_occupied_tiles = [tile_index + i*self.dim for i in range(self.block_length)]
+        print("initial occupied tiles", self.initial_occupied_tiles) 
+        self.initial_occupied_tile_head_i = self.full_occupied_tiles.index(self.initial_occupied_tiles[0])
+        self.initial_occupied_tile_tail_i = self.full_occupied_tiles.index(self.initial_occupied_tiles[-1])
+        self.moved_occupied_tiles = []
+
+        print('head', self.initial_occupied_tile_head_i) 
 
     
     def attach(self):
