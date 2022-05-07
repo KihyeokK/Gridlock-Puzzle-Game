@@ -468,10 +468,11 @@ class Application(tk.Tk):
             if any([(source.moved_occupied_tiles[0+i] in source.full_occupied_tiles) for i in range(source.block_length)]) and ix1-abs(x1) > 0: #if movement is leftward
                 #reinsert initially occupied tiles for overlapping handling
                 for tile in source.initial_occupied_tiles:
-                    try:
-                        source.full_occupied_tiles.append(tile)
-                    except Exception:
-                        pass
+                    for src in self.sources:
+                        if tile not in src.full_occupied_tiles:
+                            src.full_occupied_tiles.append(tile)
+                        src.full_occupied_tiles = sorted(src.full_occupied_tiles)
+                        print("tile added", src.full_occupied_tiles)
                 source.full_occupied_tiles = sorted(source.full_occupied_tiles) #should be sorted to get correct overlapping tile
                 print('leftward movement')
                 overlapping_tile_i = source.initial_occupied_tile_head_i#first encountered occupied tile
@@ -496,12 +497,14 @@ class Application(tk.Tk):
 
             elif any([((source.moved_occupied_tiles[-1-i] + 1) in source.full_occupied_tiles) for i in range(source.block_length)]) and ix1-abs(x1) < 0: #for rightward movement
                 for tile in source.initial_occupied_tiles:
-                    try:
-                        source.full_occupied_tiles.append(tile)
-                        print("tile is being added to full occupied tiles for overlapping tile calc", tile)
-                    except Exception:
-                        raise ValueError
+                    for src in self.sources:
+                        if tile not in src.full_occupied_tiles:
+                            src.full_occupied_tiles.append(tile)
+                        print("tile is being added to full occupied tiles IN EVERY SOURCES for overlapping tile calc", tile)
+                        src.full_occupied_tiles = sorted(src.full_occupied_tiles)
+                        print("tile added//", src.full_occupied_tiles)
                 source.full_occupied_tiles = sorted(source.full_occupied_tiles) #sort
+                print("tile added full occupied tiles list", source.full_occupied_tiles)
                 print('occupied rightward movement')
                 overlapping_tile_i = source.initial_occupied_tile_tail_i #index of the overlapping tile in full occupied tiles list
                 print("index out of range?: ", overlapping_tile_i)
