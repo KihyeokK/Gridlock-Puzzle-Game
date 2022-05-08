@@ -473,7 +473,7 @@ class Application(tk.Tk):
         elif y1 < 0:
             block_length = y2-y1
             y1, y2 = BLOCK_GAP, block_length + BLOCK_GAP
-            source.moved_occupied_tiles = [(y1 // PIXELS_PER_SQUARE * source.dim + i*source.dim) for i in range(source.block_length)]
+            source.moved_occupied_tiles = [(x1 // PIXELS_PER_SQUARE + i*source.dim) for i in range(source.block_length)]
             print("moved block out of canvas, so had to change value", source.moved_occupied_tiles)
         elif x2 > self.board_size:
             block_length = x2-x1
@@ -483,7 +483,7 @@ class Application(tk.Tk):
         elif y2 > self.board_size:
             block_length = y2-y1
             y1, y2 = self.board_size - block_length, self.board_size
-            source.moved_occupied_tiles = [(source.dim - 1 - i) for i in range(source.block_length)][::-1]
+            source.moved_occupied_tiles = [(x1 // PIXELS_PER_SQUARE + (source.dim - 1)*source.dim - i*source.dim) for i in range(source.block_length)][::-1]
             print("moved block out of canvas, so had to change value", source.moved_occupied_tiles)
 
         #for rectangle drawing
@@ -561,7 +561,7 @@ class Application(tk.Tk):
             
             elif ix1-abs(x1) > 0: #for leftward normal movement
                 print("normal leftward movement")  
-                if x1 == BLOCK_GAP: #if out of range while doing normal right movement
+                if x1 == BLOCK_GAP: #if out of range while doing normal leftward movement
                     self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
                     self.update_horizontal_source(source, x1, y1, x2, y2)
                 else: 
@@ -652,7 +652,42 @@ class Application(tk.Tk):
                     print("adjusted movement")
                     self.moved_block_id = self.canvas.create_rectangle(x1, adjusted_y1, x2, adjusted_y2, fill="silver", tags=f"{block_tag[0]}")
                     #update source object for following movements
-                    self.update_vertical_source(source, x1, adjusted_y1, x2, adjusted_y2)    
+                    self.update_vertical_source(source, x1, adjusted_y1, x2, adjusted_y2)
+
+            elif iy1-abs(y1) > 0: #for upward normal movement
+                print("normal upward movement")  
+                if y1 == BLOCK_GAP: #if out of range while doing normal upward movement
+                    self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+                    self.update_vertical_source(source, x1, y1, x2, y2)
+                else: 
+                    print("snap up")
+                    snap_y1 = (y1-BLOCK_GAP) // PIXELS_PER_SQUARE * PIXELS_PER_SQUARE + BLOCK_GAP
+                    snap_y2 = y2 // PIXELS_PER_SQUARE * PIXELS_PER_SQUARE
+                    print("snapy1, snapy2 ", snap_y1, snap_y2) 
+                    self.moved_block_id = self.canvas.create_rectangle(x1, snap_y1, x2, snap_y2,  fill="silver", tags=f"{block_tag[0]}")
+                    #update source object for following movements
+                    self.update_vertical_source(source, x1, snap_y1, x2, snap_y2)
+                
+            elif iy1-abs(y1) < 0: #for downward normal movement:
+                print("normal downward movement")
+                if y2 == self.board_size:
+                    print("normal out of canvas move ")
+                    self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+                    self.update_vertical_source(source, x1, y1, x2, y2)
+                else: 
+                    print("snap down")
+                    snap_y1 = ((y1-BLOCK_GAP) // PIXELS_PER_SQUARE + 1) * PIXELS_PER_SQUARE + BLOCK_GAP
+                    snap_y2 = (y2 // PIXELS_PER_SQUARE + 1) * PIXELS_PER_SQUARE 
+                    print("snapy1, snapy2 ", snap_y1, snap_y2)
+                    self.moved_block_id = self.canvas.create_rectangle(x1, snap_y1, x2, snap_y2,  fill="silver", tags=f"{block_tag[0]}")
+                    #update source object for following movements
+                    self.update_vertical_source(source, x1, snap_y1, x2, snap_y2)  
+            else:
+                print("out of canvas movement")
+                self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+                #update source object for following movements
+                self.update_vertical_source(source, x1, y1, x2, y2)
+
         source.dndid = self.moved_block_id #updating the source object
         source.attach()   
 
