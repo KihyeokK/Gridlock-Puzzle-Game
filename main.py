@@ -1,10 +1,8 @@
-from turtle import Turtle
 from Board import Board
 from Solver import Solver
 import tkinter as tk
 import os
 import tkinter.dnd
-import copy
 
 PIXELS_PER_SQUARE = 100
 LEVEL_FONT_SIZE = 20
@@ -365,13 +363,17 @@ class Application(tk.Tk):
 
         self.left_should_move_back = False #for leftward movement
         self.right_should_move_back = False #for rightward movement
-        self.up_down_should_move_back = False
+        self.up_should_move_back = False
+        self.down_should_move_back = False
         if block_tag[0] == "horizontal" or block_tag[0] == "main":
             for tile in source.moved_occupied_tiles:
                 if tile in full_occupied_tiles:
                     self.left_should_move_back = True
                     break 
             for tile in source.moved_occupied_tiles:
+                if tile in full_occupied_tiles: #To check tail tile as well
+                    self.right_should_move_back = True
+                    break
                 if tile+1 in full_occupied_tiles:
                     self.right_should_move_back = True
                     break
@@ -382,8 +384,15 @@ class Application(tk.Tk):
         elif block_tag[0] == "vertical":
             for tile in source.moved_occupied_tiles:
                 if tile in full_occupied_tiles:
-                    self.up_down_should_move_back = True
-                    break 
+                    self.up_should_move_back = True
+                    break
+            for tile in source.moved_occupied_tiles:
+                if tile in full_occupied_tiles: #To check tail tile as well
+                    self.right_should_move_back = True
+                    break
+                if tile+source.dim in full_occupied_tiles:
+                    self.up_should_move_back = True
+                    break  
             self.canvas.move(source.dndid, 0, y-y1)
 
     def update_horizontal_source(self, source, x1, y1, x2, y2):
@@ -499,7 +508,12 @@ class Application(tk.Tk):
             print("horizontal left and right full occupied tiles", source.full_occupied_tiles)
             #if any of the tiles occupied by the moved block overlaps with any other block, don't allow any movement, since it is an illegal move.
             # 
-            if any([(source.moved_occupied_tiles[0+i] in source.full_occupied_tiles) for i in range(source.block_length)]) and ix1-abs(x1) > 0: #if movement is leftward
+            if any([(source.moved_occupied_tiles[-1-i] in source.full_occupied_tiles) for i in range(source.block_length)]) and ix1-abs(x1) > 0: #if movement is leftward
+                for i in range(source.block_length):
+                    tile = source.moved_occupied_tiles[-1-i] #[-1-i] is important. This will prevent moving block from overlapping with another block when more than two blocks are overlapping along the way.
+                    if tile in source.full_occupied_tiles:
+                        overlapping_tile = tile
+                        break
                 #reinsert initially occupied tiles for overlapping handling
                 for tile in source.initial_occupied_tiles:
                     for src in self.sources:
@@ -509,10 +523,7 @@ class Application(tk.Tk):
                         print("tile added", src.full_occupied_tiles)
                 source.full_occupied_tiles = sorted(source.full_occupied_tiles) #should be sorted to get correct overlapping tile
                 print('leftward movement')
-                overlapping_tile_i = source.initial_occupied_tile_head_i#first encountered occupied tile
-                print("overlapping tile index:", overlapping_tile_i)
                 print("full occupied list:", source.full_occupied_tiles)
-                overlapping_tile = source.full_occupied_tiles[overlapping_tile_i-1]
                 print("overlapping tile:", overlapping_tile)
                 overlap_x1 = (overlapping_tile) % source.dim * PIXELS_PER_SQUARE
                 overlap_x2 = (overlapping_tile) % source.dim * PIXELS_PER_SQUARE + PIXELS_PER_SQUARE
@@ -529,7 +540,12 @@ class Application(tk.Tk):
                     #update source object for following movements
                     self.update_horizontal_source(source, adjusted_x1, y1, adjusted_x2, y2)
 
-            elif any([((source.moved_occupied_tiles[-1-i] + 1) in source.full_occupied_tiles and (source.moved_occupied_tiles[-1-i] + 1) % source.dim != 0) for i in range(source.block_length)]) and ix1-abs(x1) < 0: #for rightward movement
+            elif any([((source.moved_occupied_tiles[0+i] + 1) in source.full_occupied_tiles) for i in range(source.block_length)]) and ix1-abs(x1) < 0: #for rightward movement
+                for i in range(source.block_length):
+                    tile = source.moved_occupied_tiles[0+i] + 1 #[0+i] + 1 is important. This will prevent moving block from overlapping with another block when more than two blocks are overlapping along the way.
+                    if tile in source.full_occupied_tiles:
+                        overlapping_tile = tile
+                        break
                 for tile in source.initial_occupied_tiles:
                     for src in self.sources:
                         if tile not in src.full_occupied_tiles:
@@ -540,9 +556,7 @@ class Application(tk.Tk):
                 source.full_occupied_tiles = sorted(source.full_occupied_tiles) #sort
                 print("tile added full occupied tiles list", source.full_occupied_tiles)
                 print('occupied rightward movement')
-                overlapping_tile_i = source.initial_occupied_tile_tail_i #index of the overlapping tile in full occupied tiles list
-                print("index out of range?: ", overlapping_tile_i)
-                overlapping_tile = source.full_occupied_tiles[overlapping_tile_i+1]
+                print("overlapping tile: ", overlapping_tile)
                 overlap_x1 = (overlapping_tile) % source.dim * PIXELS_PER_SQUARE #overlapping tile's coordinates
                 overlap_x2 = (overlapping_tile) % source.dim * PIXELS_PER_SQUARE + PIXELS_PER_SQUARE
                 adjusted_x1 = (overlapping_tile - source.block_length) % source.dim * PIXELS_PER_SQUARE + BLOCK_GAP
@@ -554,6 +568,7 @@ class Application(tk.Tk):
                     #no need for occupied tiles update
                 else:
                     print("adjusted movement")
+                    print("adjusted x1, x2", adjusted_x1, adjusted_x2)
                     self.moved_block_id = self.canvas.create_rectangle(adjusted_x1, y1, adjusted_x2, y2,  fill="silver", tags=f"{block_tag[0]}")          
             
                     #update source object for following movements
@@ -595,7 +610,13 @@ class Application(tk.Tk):
                 self.update_horizontal_source(source, x1, y1, x2, y2)
 
         elif block_tag[0] == "vertical":
-            if any([(source.moved_occupied_tiles[0+i] in source.full_occupied_tiles) for i in range(source.block_length)]) and iy1-abs(y1) > 0: #if movement is upward
+            if any([(source.moved_occupied_tiles[-1-i] in source.full_occupied_tiles) for i in range(source.block_length)]) and iy1-abs(y1) > 0: #if movement is upward
+                for i in range(source.block_length):
+                    tile = source.moved_occupied_tiles[-1-i] #[-1-i] is important. This will prevent moving block from overlapping with another block when more than two blocks are overlapping along the way.
+                    if tile in source.full_occupied_tiles:
+                        overlapping_tile = tile
+                        break
+                print("overlapping tile:", overlapping_tile)
                 #reinsert initially occupied tiles for overlapping handling
                 for tile in source.initial_occupied_tiles:
                     for src in self.sources:
@@ -604,18 +625,12 @@ class Application(tk.Tk):
                         src.full_occupied_tiles = sorted(src.full_occupied_tiles)
                         print("tile added", src.full_occupied_tiles)
                 print("full occupied list:", source.full_occupied_tiles)
-                for i in range(source.block_length):
-                    tile = source.moved_occupied_tiles[0+i]
-                    if tile in source.full_occupied_tiles:
-                        overlapping_tile = tile
-                        break
-                print("overlapping tile:", overlapping_tile)
                 overlap_y1 = (overlapping_tile) // source.dim * PIXELS_PER_SQUARE
                 overlap_y2 = (overlapping_tile) // source.dim * PIXELS_PER_SQUARE + PIXELS_PER_SQUARE
                 adjusted_y1 = (overlapping_tile + source.dim) // source.dim * PIXELS_PER_SQUARE + BLOCK_GAP
                 adjusted_y2 = (overlapping_tile + source.dim) // source.dim * PIXELS_PER_SQUARE + source.block_length * PIXELS_PER_SQUARE 
                 print("adjusted y1:", adjusted_y1)
-                if self.up_down_should_move_back and abs(overlap_y2 - y1) > ADJUSTMENT_TOLERANCE:
+                if self.up_should_move_back and abs(overlap_y2 - y1) > ADJUSTMENT_TOLERANCE:
                     self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill="silver", tags=f"{block_tag[0]}")
                     self.player_move -= 1 #so that it doesn't change. (Since it's an illegal move)
                 else:
@@ -624,7 +639,13 @@ class Application(tk.Tk):
                     #update source object for following movements
                     self.update_vertical_source(source, x1, adjusted_y1, x2, adjusted_y2)
 
-            elif any([((source.moved_occupied_tiles[-1-i] + source.dim) in source.full_occupied_tiles) for i in range(source.block_length)]) and iy1-abs(y1) < 0: #if movement is downward
+            elif any([((source.moved_occupied_tiles[0+i] + source.dim) in source.full_occupied_tiles) for i in range(source.block_length)]) and iy1-abs(y1) < 0: #if movement is downward
+                for i in range(source.block_length):
+                    tile = source.moved_occupied_tiles[0+i] + source.dim
+                    if tile in source.full_occupied_tiles:
+                        overlapping_tile = tile
+                        break
+                print("overlapping tile:", overlapping_tile)
                 #reinsert initially occupied tiles for overlapping handling
                 for tile in source.initial_occupied_tiles:
                     for src in self.sources:
@@ -633,18 +654,12 @@ class Application(tk.Tk):
                         src.full_occupied_tiles = sorted(src.full_occupied_tiles)
                         print("tile added", src.full_occupied_tiles)
                 print("full occupied list:", source.full_occupied_tiles)
-                for i in range(source.block_length):
-                    tile = source.moved_occupied_tiles[-1-i] + source.dim
-                    if tile in source.full_occupied_tiles:
-                        overlapping_tile = tile
-                        break
-                print("overlapping tile:", overlapping_tile)
                 overlap_y1 = (overlapping_tile) // source.dim * PIXELS_PER_SQUARE
                 overlap_y2 = (overlapping_tile) // source.dim * PIXELS_PER_SQUARE + PIXELS_PER_SQUARE
                 adjusted_y1 = (overlapping_tile - source.dim * source.block_length) // source.dim * PIXELS_PER_SQUARE + BLOCK_GAP
                 adjusted_y2 = (overlapping_tile - source.dim * source.block_length) // source.dim * PIXELS_PER_SQUARE + source.block_length * PIXELS_PER_SQUARE 
                 print("adjusted y1 and y2:", adjusted_y1, adjusted_y2)
-                if self.up_down_should_move_back and abs(overlap_y1 - y2) > ADJUSTMENT_TOLERANCE:
+                if self.down_should_move_back and abs(overlap_y1 - y2) > ADJUSTMENT_TOLERANCE:
                     print("asdfklsajfjfldaf")
                     self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2, fill="silver", tags=f"{block_tag[0]}")
                     self.player_move -= 1 #so that it doesn't change. (Since it's an illegal move)
@@ -722,13 +737,7 @@ class Source:
         elif self.block_tag[0] == "vertical":
             self.initial_occupied_tiles = [(tile_index + i*self.dim) for i in range(self.block_length)]
         print("source: initial occupied tiles", self.initial_occupied_tiles) 
-        self.initial_occupied_tile_head_i = self.full_occupied_tiles.index(self.initial_occupied_tiles[0])
-        self.initial_occupied_tile_tail_i = self.full_occupied_tiles.index(self.initial_occupied_tiles[-1])
-        print("head and tail index initial occupied tiles", self.initial_occupied_tile_head_i, self.initial_occupied_tile_tail_i)
-        self.moved_occupied_tiles = []
-
-        print('head', self.initial_occupied_tile_head_i) 
-
+        self.moved_occupied_tiles = [] 
         self.block_coords = (x1+1, y1+1, x2-1, y2-1) #bbox makes -1 pixel difference #needs to be updated when new position 
         print("self.block_coords: ", self.block_coords)
 
