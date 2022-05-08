@@ -326,15 +326,26 @@ class Application(tk.Tk):
         message = f"Successfully escaped from the gridlock!\nRecord: {self.player_move - 1} moves" #escaping does not count as a move, so decrease by 1.
         tkinter.messagebox.showinfo('Success!', message)
 
-    def is_illegal_move(self, source):
-        current_tile = source.moved_occupied_tiles[-1]
-        check_tile = source.initial_occupied_tiles[-1]
-        while current_tile != check_tile:
-            if current_tile in source.full_occupied_tiles:
-                return True
-            print("current and check tiles", current_tile, check_tile)
-            current_tile -= 1
-        return False
+    def is_illegal_move(self, source, direction):
+        if direction == "rightward":
+            current_tile = source.moved_occupied_tiles[-1]
+            check_tile = source.initial_occupied_tiles[-1]
+            while current_tile != check_tile:
+                if current_tile in source.full_occupied_tiles:
+                    return True
+                print("current and check tiles", current_tile, check_tile)
+                current_tile -= 1
+            return False
+        elif direction == "leftward":
+            current_tile = source.moved_occupied_tiles[0]
+            check_tile = source.initial_occupied_tiles[0]
+            while current_tile != check_tile:
+                if current_tile in source.full_occupied_tiles:
+                    return True
+                print("current and check tiles", current_tile, check_tile)
+                current_tile += 1
+            return False
+
     #source is an instance of Source class, containing a canvas item's info
     def dnd_motion(self, source, event):
         full_occupied_tiles = source.full_occupied_tiles
@@ -546,7 +557,7 @@ class Application(tk.Tk):
                 adjusted_x1 = (overlapping_tile+1) % source.dim * PIXELS_PER_SQUARE + BLOCK_GAP
                 adjusted_x2 = (overlapping_tile+1) % source.dim * PIXELS_PER_SQUARE + source.block_length * PIXELS_PER_SQUARE
                 print("adj:", adjusted_x1)
-                if self.left_should_move_back and abs(overlap_x2 - x1) > ADJUSTMENT_TOLERANCE:
+                if self.is_illegal_move(source, "leftward") and abs(overlap_x2 - x1) > ADJUSTMENT_TOLERANCE:
                     self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill=fill_color, tags=f"{block_tag[0]}")
                     self.player_move -= 1 #so that it doesn't change. (Since it's an illegal move)
                 else:
@@ -577,7 +588,7 @@ class Application(tk.Tk):
                 overlap_x2 = (overlapping_tile) % source.dim * PIXELS_PER_SQUARE + PIXELS_PER_SQUARE
                 adjusted_x1 = (overlapping_tile - source.block_length) % source.dim * PIXELS_PER_SQUARE + BLOCK_GAP
                 adjusted_x2 = (overlapping_tile - source.block_length) % source.dim * PIXELS_PER_SQUARE + source.block_length * PIXELS_PER_SQUARE
-                if self.right_should_move_back and abs(overlap_x1 - x2) > ADJUSTMENT_TOLERANCE:
+                if self.is_illegal_move(source, "rightward") and abs(overlap_x1 - x2) > ADJUSTMENT_TOLERANCE:
                     ix1, iy1, ix2, iy2 = source.block_coords #initial coords
                     self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill=fill_color, tags=f"{block_tag[0]}")
                     self.player_move -= 1 #so that move count doesn't change. Illegal move attempt won't count as a move.
@@ -595,7 +606,7 @@ class Application(tk.Tk):
                 if x1 == BLOCK_GAP: #if out of range while doing normal leftward movement
                     self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")
                     self.update_horizontal_source(source, x1, y1, x2, y2)
-                elif self.is_illegal_move(source):
+                elif self.is_illegal_move(source, "leftward"):
                     ix1, iy1, ix2, iy2 = source.block_coords #initial coords
                     self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill=fill_color, tags=f"{block_tag[0]}")
                 else: 
@@ -613,7 +624,7 @@ class Application(tk.Tk):
                     print("normal out of canvas move ")
                     self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")
                     self.update_horizontal_source(source, x1, y1, x2, y2)
-                elif self.is_illegal_move(source):
+                elif self.is_illegal_move(source, "rightward"):
                     ix1, iy1, ix2, iy2 = source.block_coords #initial coords
                     self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill=fill_color, tags=f"{block_tag[0]}") 
                 else: 
@@ -733,7 +744,7 @@ class Application(tk.Tk):
         self.player_move_lbl = tk.Label(self.middle_frame, text=f"Moves: {self.player_move}")
         self.player_move_lbl.grid(row=1)
 
-        if block_tag[0] == "main" and x2 == self.board_size and not self.is_illegal_move(source):
+        if block_tag[0] == "main" and x2 == self.board_size and not self.is_illegal_move(source, "rightward"):
             self.display_win_message()
 
 class Source:
