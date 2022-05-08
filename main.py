@@ -499,9 +499,11 @@ class Application(tk.Tk):
         ix1, iy1, ix2, iy2 = source.block_coords #initial coords
         print("x1, x2: ", x1, x2)
         print("ix1: ", ix1, iy1, ix2, iy2)
-        if block_tag[0] == "main":
-            self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="red", tags=f"{block_tag[0]}")
-        elif block_tag[0] == "horizontal" or block_tag[0] == "main":
+        if block_tag[0] == "horizontal" or block_tag[0] == "main":
+            if block_tag[0] == "main":
+                fill_color = "red"
+            else:
+                fill_color = "silver"
             print("moved:", source.moved_occupied_tiles)
             print("initial occupied tiles", source.initial_occupied_tiles)
             print("moved tale tile", source.moved_occupied_tiles[-1])
@@ -531,11 +533,11 @@ class Application(tk.Tk):
                 adjusted_x2 = (overlapping_tile+1) % source.dim * PIXELS_PER_SQUARE + source.block_length * PIXELS_PER_SQUARE
                 print("adj:", adjusted_x1)
                 if self.left_should_move_back and abs(overlap_x2 - x1) > ADJUSTMENT_TOLERANCE:
-                    self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill="silver", tags=f"{block_tag[0]}")
+                    self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill=fill_color, tags=f"{block_tag[0]}")
                     self.player_move -= 1 #so that it doesn't change. (Since it's an illegal move)
                 else:
-                    print("adjusted movement")
-                    self.moved_block_id = self.canvas.create_rectangle(adjusted_x1, y1, adjusted_x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+                    print("adjusted movement") 
+                    self.moved_block_id = self.canvas.create_rectangle(adjusted_x1, y1, adjusted_x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")
 
                     #update source object for following movements
                     self.update_horizontal_source(source, adjusted_x1, y1, adjusted_x2, y2)
@@ -563,13 +565,13 @@ class Application(tk.Tk):
                 adjusted_x2 = (overlapping_tile - source.block_length) % source.dim * PIXELS_PER_SQUARE + source.block_length * PIXELS_PER_SQUARE
                 if self.right_should_move_back and abs(overlap_x1 - x2) > ADJUSTMENT_TOLERANCE:
                     ix1, iy1, ix2, iy2 = source.block_coords #initial coords
-                    self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill="silver", tags=f"{block_tag[0]}")
+                    self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill=fill_color, tags=f"{block_tag[0]}")
                     self.player_move -= 1 #so that move count doesn't change. Illegal move attempt won't count as a move.
                     #no need for occupied tiles update
                 else:
                     print("adjusted movement")
                     print("adjusted x1, x2", adjusted_x1, adjusted_x2)
-                    self.moved_block_id = self.canvas.create_rectangle(adjusted_x1, y1, adjusted_x2, y2,  fill="silver", tags=f"{block_tag[0]}")          
+                    self.moved_block_id = self.canvas.create_rectangle(adjusted_x1, y1, adjusted_x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")          
             
                     #update source object for following movements
                     self.update_horizontal_source(source, adjusted_x1, y1, adjusted_x2, y2)
@@ -577,14 +579,14 @@ class Application(tk.Tk):
             elif ix1-abs(x1) > 0: #for leftward normal movement
                 print("normal leftward movement")  
                 if x1 == BLOCK_GAP: #if out of range while doing normal leftward movement
-                    self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+                    self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")
                     self.update_horizontal_source(source, x1, y1, x2, y2)
                 else: 
                     print("snap left")
                     snap_x1 = (x1-BLOCK_GAP) // PIXELS_PER_SQUARE * PIXELS_PER_SQUARE + BLOCK_GAP
                     snap_x2 = x2 // PIXELS_PER_SQUARE * PIXELS_PER_SQUARE
                     print("snapx1, snapx2 ", snap_x1, snap_x2) 
-                    self.moved_block_id = self.canvas.create_rectangle(snap_x1, y1, snap_x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+                    self.moved_block_id = self.canvas.create_rectangle(snap_x1, y1, snap_x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")
                     #update source object for following movements
                     self.update_horizontal_source(source, snap_x1, y1, snap_x2, y2)
                 
@@ -592,20 +594,20 @@ class Application(tk.Tk):
                 print("normal rightward movement")
                 if x2 == self.board_size:
                     print("normal out of canvas move ")
-                    self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+                    self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")
                     self.update_horizontal_source(source, x1, y1, x2, y2)
                 else: 
                     print("snap right")
                     snap_x1 = ((x1-BLOCK_GAP) // PIXELS_PER_SQUARE + 1) * PIXELS_PER_SQUARE + BLOCK_GAP
                     snap_x2 = (x2 // PIXELS_PER_SQUARE + 1) * PIXELS_PER_SQUARE 
                     print("snapx1, snapx2 ", snap_x1, snap_x2)
-                    self.moved_block_id = self.canvas.create_rectangle(snap_x1, y1, snap_x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+                    self.moved_block_id = self.canvas.create_rectangle(snap_x1, y1, snap_x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")
                     #update source object for following movements
                     self.update_horizontal_source(source, snap_x1, y1, snap_x2, y2)
 
             else:
                 print("out of canvas movement")
-                self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill="silver", tags=f"{block_tag[0]}")
+                self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")
                 #update source object for following movements
                 self.update_horizontal_source(source, x1, y1, x2, y2)
 
