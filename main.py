@@ -236,17 +236,17 @@ class Application(tk.Tk):
             vx1, vy1, vx2, vy2 = x + BLOCK_GAP, y + BLOCK_GAP, x + PIXELS_PER_SQUARE, y + PIXELS_PER_SQUARE * block_length
             if block == "M":
                 id = self.canvas.create_rectangle(hx1, hy1, hx2, hy2, fill="red", tags="main")
-                source = Source(id, self.canvas, True, board.occupied_tiles, block_length, dim)
+                source = Source(id, self.canvas, board.occupied_tiles, block_length, dim)
                 source.attach()
                 self.sources.append(source) #used to keep track of all the block sources in a board. Needed to update occupied tiles lists.
             elif direction == "horizontal":
                 id = self.canvas.create_rectangle(hx1, hy1, hx2, hy2, fill=block_color, tags="horizontal")
-                source = Source(id, self.canvas, False, board.occupied_tiles, block_length, dim)
+                source = Source(id, self.canvas, board.occupied_tiles, block_length, dim)
                 source.attach()
                 self.sources.append(source)
             elif direction == "vertical":
                 id = self.canvas.create_rectangle(vx1, vy1, vx2, vy2, fill=block_color, tags="vertical")
-                source = Source(id, self.canvas, False, board.occupied_tiles, block_length, dim)
+                source = Source(id, self.canvas, board.occupied_tiles, block_length, dim)
                 source.attach()
                 self.sources.append(source)
                 
@@ -321,19 +321,20 @@ class Application(tk.Tk):
     def decrease_step(self):
         self.step -= 1
 
-    def display_win_frame(self):
-        self.top_frame.destroy()
-        self.main_frame.destroy()
-        self.middle_frame.destroy()
-        self.bottom_frame.destroy()
-
-        self.display_choose_level_frame()
-
-        message = f"Successfully escaped!\nRecord: {self.player_move}"
+    def display_win_message(self):
+        self.choose_again()
+        message = f"Successfully escaped from the gridlock!\nRecord: {self.player_move - 1} moves" #escaping does not count as a move, so decrease by 1.
         tkinter.messagebox.showinfo('Success!', message)
 
-
-    
+    def is_illegal_move(self, source):
+        current_tile = source.moved_occupied_tiles[-1]
+        check_tile = source.initial_occupied_tiles[-1]
+        while current_tile != check_tile:
+            if current_tile in source.full_occupied_tiles:
+                return True
+            print("current and check tiles", current_tile, check_tile)
+            current_tile -= 1
+        return False
     #source is an instance of Source class, containing a canvas item's info
     def dnd_motion(self, source, event):
         full_occupied_tiles = source.full_occupied_tiles
@@ -517,9 +518,6 @@ class Application(tk.Tk):
                 fill_color = "red"
             else:
                 fill_color = "silver"
-                
-            if block_tag[0] == "main" and x2 == self.board_size:
-                self.display_win_frame()
             print("moved:", source.moved_occupied_tiles)
             print("initial occupied tiles", source.initial_occupied_tiles)
             print("moved tale tile", source.moved_occupied_tiles[-1])
@@ -597,6 +595,9 @@ class Application(tk.Tk):
                 if x1 == BLOCK_GAP: #if out of range while doing normal leftward movement
                     self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")
                     self.update_horizontal_source(source, x1, y1, x2, y2)
+                elif self.is_illegal_move(source):
+                    ix1, iy1, ix2, iy2 = source.block_coords #initial coords
+                    self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill=fill_color, tags=f"{block_tag[0]}")
                 else: 
                     print("snap left")
                     snap_x1 = (x1-BLOCK_GAP) // PIXELS_PER_SQUARE * PIXELS_PER_SQUARE + BLOCK_GAP
@@ -612,6 +613,9 @@ class Application(tk.Tk):
                     print("normal out of canvas move ")
                     self.moved_block_id = self.canvas.create_rectangle(x1, y1, x2, y2,  fill=fill_color, tags=f"{block_tag[0]}")
                     self.update_horizontal_source(source, x1, y1, x2, y2)
+                elif self.is_illegal_move(source):
+                    ix1, iy1, ix2, iy2 = source.block_coords #initial coords
+                    self.moved_block_id = self.canvas.create_rectangle(ix1, iy1, ix2, iy2,  fill=fill_color, tags=f"{block_tag[0]}") 
                 else: 
                     print("snap right")
                     snap_x1 = ((x1-BLOCK_GAP) // PIXELS_PER_SQUARE + 1) * PIXELS_PER_SQUARE + BLOCK_GAP
@@ -729,11 +733,13 @@ class Application(tk.Tk):
         self.player_move_lbl = tk.Label(self.middle_frame, text=f"Moves: {self.player_move}")
         self.player_move_lbl.grid(row=1)
 
+        if block_tag[0] == "main" and x2 == self.board_size and not self.is_illegal_move(source):
+            self.display_win_message()
+
 class Source:
-    def __init__(self, id, canvas, main_block, occupied_tiles, block_length, dimension):
+    def __init__(self, id, canvas, occupied_tiles, block_length, dimension):
         self.canvas = canvas
         self.dndid = id
-        self.main_block = main_block #True if the block is main block
         self.full_occupied_tiles = occupied_tiles #every occupied tiles
         self.block_length = block_length #block length in terms of number of occupied tiles for one block
         self.dim = dimension
