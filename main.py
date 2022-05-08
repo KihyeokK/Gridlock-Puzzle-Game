@@ -3,6 +3,7 @@ from Solver import Solver
 import tkinter as tk
 import os
 import tkinter.dnd
+import tkinter.messagebox
 
 PIXELS_PER_SQUARE = 100
 LEVEL_FONT_SIZE = 20
@@ -320,6 +321,18 @@ class Application(tk.Tk):
     def decrease_step(self):
         self.step -= 1
 
+    def display_win_frame(self):
+        self.top_frame.destroy()
+        self.main_frame.destroy()
+        self.middle_frame.destroy()
+        self.bottom_frame.destroy()
+
+        self.display_choose_level_frame()
+
+        message = f"Successfully escaped!\nRecord: {self.player_move}"
+        tkinter.messagebox.showinfo('Success!', message)
+
+
     
     #source is an instance of Source class, containing a canvas item's info
     def dnd_motion(self, source, event):
@@ -504,6 +517,9 @@ class Application(tk.Tk):
                 fill_color = "red"
             else:
                 fill_color = "silver"
+                
+            if block_tag[0] == "main" and x2 == self.board_size:
+                self.display_win_frame()
             print("moved:", source.moved_occupied_tiles)
             print("initial occupied tiles", source.initial_occupied_tiles)
             print("moved tale tile", source.moved_occupied_tiles[-1])
