@@ -1,9 +1,9 @@
-    #possible tiles: head, mid, tail
-    #possible length
-    #possible directions: horizontal, vertical
 import copy 
 
 class Board(object):
+    #for heuristic
+    m = True
+    wm = False
     def __init__(self, current, solved = None):
         if type(current) == str:
             start, goal = current.split(), solved.split()
@@ -28,19 +28,15 @@ class Board(object):
             board = self.create_1D_board(blocks, dim)
 
         self.goal_blocks = goal_blocks
-        self.__dim = dim
-        self.__board = board
-        self.blocks = blocks #make private
+        self.dim = dim
+        self.board = board
+        self.blocks = blocks
         self.occupied_tiles = occupied_tiles
-
-        #for heuristic
-        self.m = False
-        self.wm = True
 
     def neighbors(self):
         '''Return a list of all the neighbor boards the current board can accesss'''
         neighbors = []
-        dim = self.__dim
+        dim = self.dim
         goal_blocks = self.goal_blocks
         blocks = self.blocks
         occupied_tiles = self.occupied_tiles
@@ -170,15 +166,13 @@ class Board(object):
         return board
 
     def heuristic(self):
-        if self.m:
+        if Board.m:
             h = self.manhattan()
-            return h
-        elif self.wm:
+        elif Board.wm:
             h = self.weighted_manhattan()
-            return h
         else:
             h = self.manhattan() #default heuristic
-            return h
+        return h
 
     def manhattan(self):
         '''Compute manhattan distance using only head tiles of respective blocks.
@@ -203,16 +197,16 @@ class Board(object):
 
     def dimension(self):
         '''Return the dimension of the board.'''
-        return self.__dim
+        return self.dim
 
     def starting_blocks(self):
         '''Retrun starting blocks configuration'''
         return self.blocks
 
     def __repr__(self):
-        dim = self.__dim
+        dim = self.dim
         result = str(dim)
-        for k, tile in enumerate(self.__board):
+        for k, tile in enumerate(self.board):
             if k % dim == 0:
                 result += '\n'
             try:

@@ -14,6 +14,18 @@ def heuristic_test():
     for line in sol_file.readlines():
         goal += line
 
+    choose_heuristic = input("Choose heuristic. m for Manhattan distance and wm for weighted Manhattan distance. ")
+
+    if choose_heuristic == "m":
+        Board.m = True
+        Board.wm = False
+    elif choose_heuristic == "wm":
+        Board.m = False
+        Board.wm = True
+    else: 
+        Board.m = True #default
+        Board.wm = False
+
     board = Board(initial, goal)    
     solver = Solver(board) #passing the initial board
 
